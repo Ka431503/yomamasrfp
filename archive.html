@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yo Mama's Foods - RFP Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#1a2744;--red:#c8102e;--bg:#f0f2f5;--card:#fff;--border:#d0d7e8;--muted:#6b7a99;--green:#1a6640;--gold:#c9a84c;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh;}
+.topbar{background:var(--navy);border-bottom:3px solid var(--red);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#fff;}
+.topbar-title em{color:var(--red);font-style:normal;}
+.main{max-width:900px;margin:0 auto;padding:32px 20px;}
+h1{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;margin-bottom:6px;}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:28px;}
+.archive-card{background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(26,39,68,.06);transition:box-shadow .15s;}
+.archive-card:hover{box-shadow:0 4px 16px rgba(26,39,68,.12);}
+.ac-num{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--navy);background:#e8ecf5;padding:4px 10px;border-radius:4px;flex-shrink:0;}
+.ac-info{flex:1;}
+.ac-name{font-size:16px;font-weight:600;margin-bottom:4px;}
+.ac-meta{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);line-height:1.8;}
+.ac-winner{display:flex;align-items:center;gap:6px;background:#f0fbf5;border:1px solid #b3dfc7;border-radius:5px;padding:6px 12px;font-size:13px;color:var(--green);font-weight:600;flex-shrink:0;}
+.ac-date{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;text-align:right;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.back-btn{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.6);text-decoration:none;padding:6px 14px;border:1.5px solid rgba(255,255,255,.3);border-radius:4px;transition:all .15s;}
+.back-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">YO MAMA<em>'S</em> · RFP ARCHIVE</div>
+  <a href="./index.html" class="back-btn">← Home</a>
+</div>
+<div class="main">
+  <h1>RFP Archive</h1>
+  <div class="sub">Completed and closed requests for quotation</div>
+  <div id="archiveList"><div class="empty"><div class="empty-icon">📦</div><div>Loading archive...</div></div></div>
+</div>
+<script>
+const SUPA_URL = 'https://ceasqangdyysnejfpgfz.supabase.co';
+const SUPA_KEY = 'sb_publishable_pKu7K-Y1o-aizvopTZu3dQ_0blkwgQ3';
+
+async function supaFetch(path){
+  const res = await fetch(SUPA_URL + path, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+  });
+  const text = await res.text();
+  try { return text ? JSON.parse(text) : []; } catch(e) { return []; }
+}
+
+async function loadArchive(){
+  const data = await supaFetch('/rest/v1/rfp_archive?select=*&order=closed_at.desc');
+  const el = document.getElementById('archiveList');
+
+  if(!data || !data.length){
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div style="font-size:15px;margin-bottom:8px;">No archived RFPs yet</div><div style="font-size:13px;">Close your first RFP from the Analysis screen to see it here.</div></div>';
+    return;
+  }
+
+  el.innerHTML = data.map(r => {
+    const date = r.closed_at ? new Date(r.closed_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    return '<div class="archive-card">' +
+      '<div class="ac-num">' + (r.rfp_number||'RFP') + '</div>' +
+      '<div class="ac-info">' +
+        '<div class="ac-name">' + (r.rfp_name||r.rfp_number||'RFP') + '</div>' +
+        '<div class="ac-meta">' + (r.items_count||0) + ' items · ' + (r.suppliers_count||0) + ' suppliers</div>' +
+      '</div>' +
+      (r.awarded_to ? '<div class="ac-winner">🏆 ' + r.awarded_to + '</div>' : '') +
+      '<div class="ac-date">' + date + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+loadArchive();
+</script>
+</body>
+</html>

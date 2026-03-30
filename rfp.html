@@ -1760,10 +1760,176 @@ function renderAnalysis(){
     </div>`;
   }).join('')}
   ${(maxT-minT)>0?`<div class="kc" style="border-color:var(--green);margin-top:12px;display:inline-flex;"><div class="kc-ring" style="border-color:var(--green)"></div><span class="kc-lab">Potential savings vs highest bidder</span><span class="kc-val" style="color:var(--green);">${fmt(maxT-minT)}</span></div>`:''}
-  <div style="margin-top:18px;display:flex;gap:10px;">
+  <div style="margin-top:24px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:20px 24px;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px;">Award Decision</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Once you've made your decision, notify all suppliers with one click.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:220px;">
+        <label style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:6px;">Select Winner</label>
+        <select id="awardWinnerSel" class="ir-input" style="width:100%;margin-bottom:10px;">
+          <option value="">-- Select supplier --</option>
+          ${act.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+        </select>
+        <button onclick="sendAwardEmail()" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px;background:#1a6640;color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;"
+          onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+          🏆 Send Award Notification
+        </button>
+      </div>
+      <div style="flex:1;min-width:220px;display:flex;flex-direction:column;justify-content:flex-end;">
+        <button onclick="sendRegretEmails()" style="width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;"
+          onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+          📧 Send Regret Letters to Others
+        </button>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px;text-align:center;">Sends a professional thank-you to all non-selected suppliers</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
     <button class="btn cancel" onclick="goS(2)">← Responses</button>
     <button class="btn ok" onclick="exportTxt()">↓ Export Summary</button>
+    <button onclick="closeAndArchiveRFP()" style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:10px 20px;background:#c8102e;color:white;border:none;border-radius:6px;cursor:pointer;transition:opacity .15s;font-weight:600;"
+      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+      ✓ Close & Archive RFP
+    </button>
   </div>`;
+}
+
+async function closeAndArchiveRFP(){
+  const sel = document.getElementById('awardWinnerSel');
+  const winnerId = sel ? sel.value : '';
+  const winner = winnerId ? state.suppliers.find(s=>s.id===winnerId) : null;
+
+  if(!confirm('Close this RFP and move it to the archive?\n\nThis will mark the RFP as completed.')) return;
+
+  // Mark state as closed
+  state.status = 'closed';
+  state.closedAt = new Date().toISOString();
+  state.awardedTo = winner ? winner.name : null;
+  state.awardedEmail = winner ? winner.email : null;
+
+  // Save to Supabase archive table
+  await supaFetch('/rest/v1/rfp_archive', 'POST', {
+    id: state.id,
+    rfp_number: state.rfpNumber,
+    rfp_name: state.rfpName || state.rfpNumber,
+    awarded_to: state.awardedTo,
+    awarded_email: state.awardedEmail,
+    items_count: state.items.length,
+    suppliers_count: state.suppliers.length,
+    closed_at: state.closedAt,
+    summary: JSON.stringify({
+      items: state.items.map(it=>({name:it.name||it.catId, qty:it.qty, unit:it.unit})),
+      suppliers: state.suppliers.map(s=>({name:s.name, status:s.status})),
+      quotes: state.quotes
+    })
+  }).catch(e=>console.log('Archive save:', e));
+
+  saveProjects();
+
+  // Show success and redirect to home
+  alert('RFP archived successfully! You can view it in the Archive section.');
+  window.location.href = './index.html';
+}
+
+async function sendAwardEmail(){
+  const sel = document.getElementById('awardWinnerSel');
+  if(!sel || !sel.value){ alert('Please select a winner first.'); return; }
+  const winner = state.suppliers.find(s=>s.id===sel.value);
+  if(!winner) return;
+
+  if(!isGmailConnected()){ connectGmail(); return; }
+
+  const rfpNum = state.rfpNumber || 'RFP-2026-001';
+  const itemList = state.items.map((it,i)=>{
+    const cat = CATALOG.find(c=>c.id===it.catId);
+    return '  - ' + (cat?cat.name:it.name||'Item '+(i+1));
+  }).join('\n');
+
+  const subject = `Yo Mamas Foods - ${rfpNum} | Award Notification`;
+  const body =
+`Dear ${winner.contact||winner.name},
+
+On behalf of Yo Mamas Foods, we are pleased to inform you that following a thorough evaluation of all proposals received for ${rfpNum}, your company has been selected as our preferred supplier.
+
+We were impressed with your competitive pricing, quality standards, and overall proposal, and we look forward to building a strong and reliable supply chain partnership with you.
+
+ITEMS AWARDED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${itemList}
+
+NEXT STEPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Our purchasing team will be in touch shortly to confirm order details, delivery schedules, and payment terms.
+
+Please do not hesitate to contact us if you have any questions in the meantime.
+
+Thank you again for your participation and for the quality of your proposal.
+
+Warm regards,
+
+Purchasing Department | Yo Mamas Foods Co.
+purchasing@yomamasfoods.com | 727-270-4940
+www.yomamasfoods.com`;
+
+  const sent = await sendGmailEmail(winner.email, (winner.otherEmails||[]).join(','), subject, body);
+  if(sent){
+    winner.status = 'accepted';
+    saveProjects();
+    render();
+    setTimeout(()=>{
+      const banner = document.createElement('div');
+      banner.innerHTML = '<div style="position:fixed;top:70px;right:20px;background:#1a6640;color:white;padding:12px 20px;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);">🏆 Award notification sent to '+winner.name+'</div>';
+      document.body.appendChild(banner);
+      setTimeout(()=>banner.remove(), 4000);
+    }, 100);
+  }
+}
+
+async function sendRegretEmails(){
+  const sel = document.getElementById('awardWinnerSel');
+  const winnerId = sel ? sel.value : '';
+  const others = state.suppliers.filter(s=>s.id!==winnerId && s.status!=='declined');
+
+  if(!others.length){ alert('No other suppliers to notify.'); return; }
+  if(!isGmailConnected()){ connectGmail(); return; }
+  if(!confirm(`Send regret letters to ${others.length} supplier(s)?\n\n${others.map(s=>s.name).join(', ')}`)) return;
+
+  const rfpNum = state.rfpNumber || 'RFP-2026-001';
+  let sent = 0;
+
+  for(const sup of others){
+    const subject = `Yo Mamas Foods - ${rfpNum} | Thank You for Your Participation`;
+    const body =
+`Dear ${sup.contact||sup.name},
+
+Thank you for taking the time to submit a proposal in response to our Request for Quotation ${rfpNum}.
+
+After careful evaluation of all submissions received, we have decided to move forward with another supplier for this particular requirement. This decision was made following a thorough review of pricing, capacity, and overall fit with our current operational needs.
+
+We want to emphasize that this outcome is not a reflection of the quality of your proposal or your company's capabilities. We were impressed by your professionalism and the effort put into your submission.
+
+We value your interest in partnering with Yo Mamas Foods and we hope to have the opportunity to collaborate on future requirements. We will keep your information on file for upcoming sourcing needs.
+
+Thank you again for your time and participation.
+
+Warm regards,
+
+Purchasing Department | Yo Mamas Foods Co.
+purchasing@yomamasfoods.com | 727-270-4940
+www.yomamasfoods.com`;
+
+    const ok = await sendGmailEmail(sup.email, (sup.otherEmails||[]).join(','), subject, body);
+    if(ok){ sent++; sup.status = 'declined'; }
+  }
+
+  saveProjects();
+  render();
+  setTimeout(()=>{
+    const banner = document.createElement('div');
+    banner.innerHTML = '<div style="position:fixed;top:70px;right:20px;background:var(--navy);color:white;padding:12px 20px;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);">📧 Regret letters sent to '+sent+' supplier(s)</div>';
+    document.body.appendChild(banner);
+    setTimeout(()=>banner.remove(), 4000);
+  }, 100);
 }
 
 function kcsH(){
