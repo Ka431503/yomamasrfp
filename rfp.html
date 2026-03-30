@@ -98,15 +98,33 @@ select.rmc-input{cursor:pointer;}
 
 /* ITEM ROWS */
 .item-row{
-  display:grid;
-  grid-template-columns:28px 1fr 160px 130px 130px 1fr 32px;
-  gap:10px;
-  align-items:start;
-  padding:12px 0;
+  background:var(--card);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  margin-bottom:12px;
+  position:relative;
+}
+.item-row:last-of-type{margin-bottom:0;}
+.item-row-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+  padding-bottom:12px;
   border-bottom:1px solid var(--border);
 }
-.item-row:last-of-type{border-bottom:none;}
-.item-row:first-of-type{padding-top:0;}
+.item-row-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+.item-row-fields-bottom{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
 
 .ir-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);padding-top:10px;}
 .ir-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:4px;}
@@ -1246,76 +1264,88 @@ function renderRFP(){
       <div style="font-size:13px;margin-top:4px;">Click <strong>"+ Add Items"</strong> to select from your ingredient catalog.</div>
     </div>`:
     `<!-- HEADER ROW -->
-    <div class="item-row" style="padding-bottom:6px;border-bottom:2px solid var(--navy)!important;">
-      <div></div>
-      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Ingredient / Item</span></div>
-      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Estimated Volume</span></div>
-      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Unit</span></div>
-      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Volume Ranges</span></div>
-      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Specs / Packaging / Delivery</span></div>
-      <div></div>
-    </div>
+
     ${state.items.map((it,idx)=>{
       const cat=CATALOG.find(c=>c.id===it.catId);
       return `<div class="item-row">
-        <div class="ir-num">${String(idx+1).padStart(2,'0')}</div>
 
-        <!-- NAME -->
-        <div class="ir-field">
-          <div style="font-weight:600;font-size:14px;">${cat?cat.name:it.name||'Custom Item'}</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${cat?cat.sku:''} ${cat&&cat.note?'· '+cat.note:''}</div>
-          <span class="pi-cat ${cat?CAT_CLS[cat.cat]||'c-other':'c-other'}" style="margin-top:4px;display:inline-block;">${cat?CATS_MAP[cat.cat]||cat.cat:'Custom'}</span>
+        <!-- HEADER: number + name + delete -->
+        <div class="item-row-header">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);background:var(--tag);border-radius:4px;padding:3px 8px;flex-shrink:0;">${String(idx+1).padStart(2,'0')}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:15px;color:var(--navy);">${cat?cat.name:it.name||'Custom Item'}</div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px;">${cat?cat.sku:''} ${cat&&cat.note?'· '+cat.note:''}</div>
+          </div>
+          <span class="pi-cat ${cat?CAT_CLS[cat.cat]||'c-other':'c-other'}">${cat?CATS_MAP[cat.cat]||cat.cat:'Custom'}</span>
+          <button class="del-row-btn" onclick="removeItem(${idx})" style="position:static;margin-left:8px;">✕</button>
         </div>
 
-        <!-- ESTIMATED VOLUME -->
-        <div class="ir-field">
-          <input class="ir-input big" type="number" step="0.01" placeholder="Volume" value="${it.qty||''}" style="width:100%;margin-bottom:5px;" oninput="state.items[${idx}].qty=parseFloat(this.value)||null"/>
-          <select class="ir-input" style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:4px;" onchange="state.items[${idx}].period=this.value">
-            ${['Annual','Monthly','Quarterly','Per Order'].map(p=>`<option ${(it.period||'Annual')===p?'selected':''}>${p}</option>`).join('')}
-          </select>
-        </div>
-
-        <!-- UNIT -->
-        <div class="ir-field">
-          <select class="ir-input" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;" onchange="setUnit(${idx},this.value)">
-            ${(cat?cat.units:['LB','KG','GL','Drum','Tote','Case','Units','RL','each']).map(u=>`<option ${it.unit===u?'selected':''}>${u}</option>`).join('')}
-          </select>
-        </div>
-
-        <!-- VOLUME TIERS -->
-        <div class="ir-field">
-          <div class="tiers-wrap">
-            ${(it.tiers||[]).map((t,ti)=>`
-            <div class="tier-mini">
-              <input value="${t.from}" placeholder="From" oninput="state.items[${idx}].tiers[${ti}].from=this.value"/>
-              <input value="${t.to||''}" placeholder="To (∞)" oninput="state.items[${idx}].tiers[${ti}].to=this.value"/>
-              <div style="display:flex;align-items:center;gap:4px;">
-                <input style="flex:1;" value="${t.label||''}" placeholder="Label (optional)" oninput="state.items[${idx}].tiers[${ti}].label=this.value"/>
-                <button class="add-tier-link" style="color:var(--muted);" onclick="rmTier(${idx},${ti})">✕</button>
-              </div>
-            </div>`).join('')}
-            <button class="add-tier-link" onclick="addTier(${idx})">+ range</button>
+        <!-- ROW 1: Volume + Period + Unit + Delivery -->
+        <div class="item-row-fields">
+          <div class="ir-field">
+            <label>Estimated Volume</label>
+            <input class="ir-input big" type="number" step="0.01" placeholder="e.g. 300000" value="${it.qty||''}" oninput="state.items[${idx}].qty=parseFloat(this.value)||null"/>
+          </div>
+          <div class="ir-field">
+            <label>Period</label>
+            <select class="ir-input" onchange="state.items[${idx}].period=this.value">
+              ${['Annual','Monthly','Quarterly','Per Order'].map(p=>`<option ${(it.period||'Annual')===p?'selected':''}>${p}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ir-field">
+            <label>Unit</label>
+            <select class="ir-input" style="font-weight:600;" onchange="setUnit(${idx},this.value)">
+              ${(cat?cat.units:['LB','KG','GL','Drum','Tote','Case','Units','RL','each']).map(u=>`<option ${it.unit===u?'selected':''}>${u}</option>`).join('')}
+            </select>
           </div>
         </div>
 
-        <!-- SPECS + PACKAGING + DELIVERY -->
-        <div class="ir-field" style="display:flex;flex-direction:column;gap:5px;">
-          <input class="ir-input" placeholder="Specs (e.g. Food grade, COA req'd)" value="${it.specs||''}" oninput="state.items[${idx}].specs=this.value"/>
-          <input class="ir-input" placeholder="Packaging req. (e.g. Full bulk pallets, drums 208L)" value="${it.packaging||''}" oninput="state.items[${idx}].packaging=this.value"/>
-          <select class="ir-input" onchange="state.items[${idx}].delivery=this.value;${idx}===0?render():null" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
-            ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL','Other'].map(loc=>`<option ${(it.delivery||'')==='${loc}'?'selected':''}>${loc}</option>`).join('')}
-          </select>
-          ${it.delivery==='Other'?`<input class="ir-input" placeholder="Specify location…" value="${it.deliveryOther||''}" oninput="state.items[${idx}].deliveryOther=this.value"/>`:''}
-          <!-- PDF ATTACH -->
-          <div>
+        <!-- ROW 2: Delivery + Specs + Packaging -->
+        <div class="item-row-fields" style="margin-top:12px;">
+          <div class="ir-field">
+            <label>Delivery Location</label>
+            <select class="ir-input" onchange="state.items[${idx}].delivery=this.value;${idx}===0?render():null">
+              ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL','Other'].map(loc=>`<option ${(it.delivery||'')==='${loc}'?'selected':''}>${loc}</option>`).join('')}
+            </select>
+            ${it.delivery==='Other'?`<input class="ir-input" placeholder="Specify location…" value="${it.deliveryOther||''}" style="margin-top:6px;" oninput="state.items[${idx}].deliveryOther=this.value"/>`:''}
+          </div>
+          <div class="ir-field">
+            <label>Specs</label>
+            <input class="ir-input" placeholder="e.g. Food grade, COA req'd" value="${it.specs||''}" oninput="state.items[${idx}].specs=this.value"/>
+          </div>
+          <div class="ir-field">
+            <label>Packaging Requirement</label>
+            <input class="ir-input" placeholder="e.g. Full bulk pallets" value="${it.packaging||''}" oninput="state.items[${idx}].packaging=this.value"/>
+          </div>
+        </div>
+
+        <!-- ROW 3: Volume Ranges + Attach -->
+        <div style="display:flex;align-items:flex-start;gap:16px;margin-top:12px;">
+          <div class="ir-field" style="flex:1;">
+            <label>Volume Ranges (optional)</label>
+            <div class="tiers-wrap">
+              ${(it.tiers||[]).map((t,ti)=>`
+              <div class="tier-mini">
+                <input value="${t.from}" placeholder="From" oninput="state.items[${idx}].tiers[${ti}].from=this.value"/>
+                <input value="${t.to||''}" placeholder="To (∞)" oninput="state.items[${idx}].tiers[${ti}].to=this.value"/>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <input style="flex:1;" value="${t.label||''}" placeholder="Label" oninput="state.items[${idx}].tiers[${ti}].label=this.value"/>
+                  <button class="add-tier-link" style="color:var(--muted);" onclick="rmTier(${idx},${ti})">✕</button>
+                </div>
+              </div>`).join('')}
+              <button class="add-tier-link" onclick="addTier(${idx})">+ range</button>
+            </div>
+          </div>
+          <div class="ir-field" style="flex-shrink:0;">
+            <label>Attachments</label>
             ${it.attachments&&it.attachments.length?
               it.attachments.map((a,ai)=>`
-                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--tag);border:1px solid var(--border);border-radius:4px;padding:4px 8px;">
-                  <span style="color:var(--accent);">📎</span>
-                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${a.name}</span>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--tag);border:1px solid var(--border);border-radius:4px;padding:4px 8px;">
+                  <span>📎</span>
+                  <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</span>
                   <button onclick="removeAttachment(${idx},${ai})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0;">✕</button>
                 </div>`).join(''):''}
-            <label style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;padding:4px 8px;border:1.5px dashed var(--border);border-radius:4px;transition:all .15s;"
+            <label style="display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;padding:6px 12px;border:1.5px dashed var(--border);border-radius:4px;transition:all .15s;white-space:nowrap;"
               onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
               📎 Attach PDF
@@ -1324,7 +1354,6 @@ function renderRFP(){
           </div>
         </div>
 
-        <button class="del-row-btn" onclick="removeItem(${idx})">✕</button>
       </div>`;
     }).join('')}`}
 
