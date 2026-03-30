@@ -836,9 +836,12 @@ async function sendGmailEmail(to, cc, subject, plainBody) {
   lines.push('Subject: ' + subject);
   lines.push('MIME-Version: 1.0');
   lines.push('Content-Type: text/plain; charset=UTF-8');
-  lines.push('Content-Transfer-Encoding: 7bit');
+  lines.push('Content-Transfer-Encoding: base64');
   lines.push('');
-  lines.push(plainBody);
+  
+  // Encode body as base64 to preserve line breaks
+  const encodedBody = btoa(unescape(encodeURIComponent(plainBody)));
+  lines.push(encodedBody);
 
   const mimeMsg = lines.join('\r\n');
   const encoded = btoa(unescape(encodeURIComponent(mimeMsg)))
@@ -913,26 +916,36 @@ async function openInGmail(){
 async function generateSupplierToken(supId){
   const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
   const sup = state.suppliers.find(s=>s.id===supId);
-  if(!sup) return null;
+  if(!sup){ console.error('Supplier not found'); return null; }
   // Strip attachments to avoid payload size issues
   const itemsClean = state.items.map(function(it){
     const c = Object.assign({}, it);
     delete c.attachments;
     return c;
   });
-  const result = await supaFetch('/rest/v1/rfp_responses', 'POST', {
-    id: uid(),
-    rfp_id: state.id,
-    supplier_id: supId,
-    supplier_name: sup.name,
-    supplier_email: sup.email,
-    token: token,
-    items: itemsClean,
-    quotes: {},
-    submitted_at: null
-  });
-  if(!result){ console.error('Failed to save token'); return null; }
-  return token;
+  console.log('Saving token to Supabase...', token);
+  try {
+    const result = await supaFetch('/rest/v1/rfp_responses', 'POST', {
+      id: uid(),
+      rfp_id: state.id,
+      supplier_id: supId,
+      supplier_name: sup.name,
+      supplier_email: sup.email,
+      token: token,
+      items: itemsClean,
+      quotes: {},
+      submitted_at: null
+    });
+    console.log('Supabase result:', result);
+    if(!result || (Array.isArray(result) && !result.length)){ 
+      console.error('Failed to save token to Supabase'); 
+      return token; // Return token anyway so email still sends
+    }
+    return token;
+  } catch(e) {
+    console.error('Token save error:', e);
+    return token; // Return token anyway
+  }
 }
 
 async function sendRFP(supId){
