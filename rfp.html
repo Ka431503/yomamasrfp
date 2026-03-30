@@ -775,6 +775,23 @@ const SUPA_URL='https://ceasqangdyysnejfpgfz.supabase.co';
 const NETLIFY_URL='https://ka431503.github.io/yomamasrfp';
 const SUPA_KEY='sb_publishable_pKu7K-Y1o-aizvopTZu3dQ_0blkwgQ3';
 
+async function supaFetch(path, method, body){
+  method = method || 'GET';
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': (method==='POST'||method==='PATCH') ? 'return=representation' : ''
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPA_URL + path, opts);
+  const text = await res.text();
+  try { return text ? JSON.parse(text) : null; } catch(e) { return null; }
+}
+
 // ── GMAIL API ────────────────────────────────────────────────
 const GMAIL_CLIENT_ID = '36671389217-mqha9lh498ogab4q0qobpl0ulu1nqqon.apps.googleusercontent.com';
 const GMAIL_REDIRECT_URI = 'https://ka431503.github.io/yomamasrfp/auth.html';
