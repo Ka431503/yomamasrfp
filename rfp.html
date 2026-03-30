@@ -895,11 +895,11 @@ async function sendRFP(supId){
   const sup = state.suppliers.find(s=>s.id===supId);
   if(!sup) return;
 
-  await saveProjectToCloud();
+  // Generate token first (save to cloud happens async after)
   const _token = await generateSupplierToken(supId);
-  console.log('Generated token:', _token);
   const responseLink = _token ? (NETLIFY_URL+'/respond.html?token='+_token) : null;
-  console.log('Response link:', responseLink);
+  // Save to cloud in background
+  saveProjectToCloud().catch(e=>console.log('Cloud save error:', e));
 
   const deadline = state.rfpDeadline ? new Date(state.rfpDeadline+' ').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '[DEADLINE TBD]';
   const rfpNum = state.rfpNumber || 'RFP-2026-001';
