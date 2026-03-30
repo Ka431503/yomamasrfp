@@ -374,48 +374,7 @@ select.rmc-input{cursor:pointer;}
 </div>
 
 <!-- EMAIL PREVIEW MODAL -->
-<div class="ov" id="emailPreviewOv">
-<div class="modal" style="width:680px;max-height:88vh;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-    <h2 style="margin:0;">📧 Send <em>RFP</em></h2>
-    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
-  </div>
 
-  <!-- To / CC / Subject -->
-  <div style="background:var(--tag);border:1px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:14px;font-size:13px;">
-    <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;align-items:baseline;">
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">To</span>
-      <span id="emailPreviewTo" style="font-weight:600;color:var(--navy);"></span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">CC</span>
-      <span id="emailPreviewCc" style="color:var(--muted);font-size:12px;"></span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Subject</span>
-      <span id="emailPreviewSubject" style="font-weight:500;"></span>
-    </div>
-  </div>
-
-  <!-- Body preview -->
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:16px;max-height:340px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;color:var(--ink);" id="emailPreviewBody"></div>
-
-  <!-- Actions -->
-  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
-    <button onclick="openInGmail()" id="sendEmailBtn"
-      style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 20px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;font-weight:600;"
-      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-      Send Email
-    </button>
-    <button id="copyBodyBtn" onclick="copyEmailBody()"
-      style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 18px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;"
-      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
-      📋 Copy Body
-    </button>
-    <button onclick="closeAll()" class="btn cancel">Cancel</button>
-  </div>
-  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-align:center;margin-top:10px;">
-    "Open in Gmail" opens a new tab with the email pre-filled — just review and hit Send
-  </div>
-</div>
-</div>
 
 <!-- NEW PROJECT MODAL -->
 <div class="ov" id="newProjOv">
