@@ -984,7 +984,8 @@ async function sendRFP(supId){
     const cat = CATALOG.find(c=>c.id===it.catId);
     const name = cat ? cat.name : (it.name||'Custom Item');
     const qty = it.qty ? `${new Intl.NumberFormat('en-US').format(it.qty)} ${it.unit} (${it.period||'Annual'})` : 'TBD';
-    const delivery = it.delivery==='Other'?(it.deliveryOther||'Other'):(it.delivery||'Clearwater, FL');
+    const deliveryArr = it.deliveries && it.deliveries.length ? it.deliveries : [it.delivery||'Clearwater, FL'];
+    const delivery = deliveryArr.map(d=>d==='Other'?(it.deliveryOther||'Other'):d).join(' / ');
     const specs = it.specs || '';
     const packaging = it.packaging || '';
     const attach = it.attachments?.length ? `[Spec sheet: ${it.attachments.map(a=>a.name).join(', ')}]` : '';
@@ -1304,10 +1305,22 @@ function renderRFP(){
         <div class="item-row-fields" style="margin-top:12px;">
           <div class="ir-field">
             <label>Delivery Location</label>
-            <select class="ir-input" onchange="state.items[${idx}].delivery=this.value;${idx}===0?render():null">
-              ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL','Other'].map(loc=>`<option ${(it.delivery||'')==='${loc}'?'selected':''}>${loc}</option>`).join('')}
-            </select>
-            ${it.delivery==='Other'?`<input class="ir-input" placeholder="Specify location…" value="${it.deliveryOther||''}" style="margin-top:6px;" oninput="state.items[${idx}].deliveryOther=this.value"/>`:''}
+            <div style="display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;background:var(--bg);">
+              ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL'].map(loc=>`
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
+                  <input type="checkbox" ${(it.deliveries||[it.delivery||'Clearwater, FL']).includes(loc)?'checked':''}
+                    onchange="toggleDelivery(${idx},'${loc}',this.checked)"
+                    style="width:14px;height:14px;cursor:pointer;accent-color:var(--navy);"/>
+                  ${loc}
+                </label>`).join('')}
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
+                <input type="checkbox" ${(it.deliveries||[]).includes('Other')?'checked':''}
+                  onchange="toggleDelivery(${idx},'Other',this.checked)"
+                  style="width:14px;height:14px;cursor:pointer;accent-color:var(--navy);"/>
+                Other
+              </label>
+              ${(it.deliveries||[]).includes('Other')?`<input class="ir-input" placeholder="Specify location…" value="${it.deliveryOther||''}" style="margin-top:2px;" oninput="state.items[${idx}].deliveryOther=this.value"/>`:''}
+            </div>
           </div>
           <div class="ir-field">
             <label>Specs</label>
@@ -1385,6 +1398,22 @@ function renderRFP(){
 function setUnit(idx,u){state.items[idx].unit=u;render();}
 function addTier(idx){state.items[idx].tiers.push({from:'',to:'',label:''});render();}
 function rmTier(idx,ti){state.items[idx].tiers.splice(ti,1);render();}
+function toggleDelivery(idx, loc, checked){
+  if(!state.items[idx].deliveries){
+    // Migrate from old single delivery
+    state.items[idx].deliveries = [state.items[idx].delivery || 'Clearwater, FL'];
+  }
+  if(checked){
+    if(!state.items[idx].deliveries.includes(loc))
+      state.items[idx].deliveries.push(loc);
+  } else {
+    state.items[idx].deliveries = state.items[idx].deliveries.filter(d=>d!==loc);
+  }
+  // Keep legacy delivery field in sync with first selected
+  state.items[idx].delivery = state.items[idx].deliveries[0] || '';
+  render();
+}
+
 function removeItem(idx){state.items.splice(idx,1);render();}
 function addBlankItem(){
   // Clear and open custom item modal
