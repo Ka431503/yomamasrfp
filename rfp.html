@@ -812,9 +812,11 @@ function isGmailConnected() {
 }
 
 function connectGmail() {
+  // Use current page as redirect so token comes back in hash
+  const currentUrl = window.location.href.split('?')[0].split('#')[0];
   const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
     'client_id=' + GMAIL_CLIENT_ID +
-    '&redirect_uri=' + encodeURIComponent(GMAIL_REDIRECT_URI) +
+    '&redirect_uri=' + encodeURIComponent(currentUrl) +
     '&response_type=token' +
     '&scope=' + encodeURIComponent(GMAIL_SCOPE) +
     '&prompt=consent' +
@@ -1923,7 +1925,25 @@ function exportTxt(){
   const b=new Blob([t],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rfp-summary.txt';a.click();
 }
 
-window.addEventListener('load',()=>{loadCustomSuppliers();loadProjects();render();});
+window.addEventListener('load',()=>{
+  // Check if returning from Gmail OAuth (implicit flow - token in URL hash)
+  if(window.location.hash && window.location.hash.includes('access_token')) {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    if(accessToken) {
+      sessionStorage.setItem('gmail_access_token', accessToken);
+      window.history.replaceState({}, '', './rfp.html');
+    }
+  }
+  // Check if returning from auth.html callback
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('gmail_connected')) {
+    window.history.replaceState({}, '', './rfp.html');
+  }
+  loadCustomSuppliers();
+  loadProjects();
+  render();
+});
 document.querySelectorAll('.ov').forEach(o=>{
   o.addEventListener('click',function(e){
     // Only close if clicking the dark overlay background itself, not anything inside the modal
