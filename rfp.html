@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yo Mama's · RFP System</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f0f2f5;--ink:#1a2744;--muted:#6b7a99;--border:#d0d7e8;
+  --card:#ffffff;--accent:#c8102e;--green:#1a6640;--blue:#1a2744;
+  --yellow:#b8860a;--tag:#e8ecf5;--sh:0 1px 3px rgba(26,39,68,.08),0 4px 14px rgba(26,39,68,.06);
+  --navy:#1a2744;--navy-light:#2a3d6e;--red:#c8102e;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:var(--navy);color:#f4f1eb;height:56px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;border-bottom:3px solid var(--red);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;}
+.logo em{color:var(--accent);font-style:normal;}
+.tbtn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 14px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f4f1eb;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.tbtn:hover{background:rgba(255,255,255,.1);}
+.tbtn.ac{background:var(--red);border-color:var(--red);}
+
+/* PIPELINE */
+.pipeline{display:flex;align-items:center;padding:18px 28px 0;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--border);padding-bottom:18px;}
+.sp{display:flex;align-items:center;cursor:pointer;flex-shrink:0;}
+.spill{display:flex;align-items:center;gap:7px;padding:9px 18px;border:1.5px solid var(--border);background:var(--card);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);transition:all .2s;}
+.sp:first-child .spill{border-radius:4px 0 0 4px;}
+.sp:last-child .spill{border-radius:0 4px 4px 0;}
+.spill.active{background:var(--navy);border-color:var(--navy);color:#f4f1eb;}
+.spill.done{background:var(--tag);color:var(--green);border-color:var(--border);}
+.snum{width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;}
+.spill.active .snum{border-color:var(--accent);color:var(--accent);}
+.sarr{width:0;height:0;border-top:19px solid transparent;border-bottom:19px solid transparent;border-left:11px solid var(--border);position:relative;z-index:2;flex-shrink:0;}
+.sarr::before{content:'';position:absolute;top:-19px;left:-13px;border-top:19px solid transparent;border-bottom:19px solid transparent;border-left:11px solid var(--card);}
+.spill.done+.sarr::before{border-left-color:var(--tag);}
+
+/* MAIN */
+.main{padding:24px 28px;}
+
+/* ─── STAGE 0 : RFP FORM ─── */
+.rfp-doc{background:var(--card);border:1.5px solid var(--border);border-radius:10px;box-shadow:var(--sh);overflow:hidden;}
+
+.rfp-doc-header{
+  background:var(--navy);
+  color:#f4f1eb;
+  padding:28px 32px 24px;
+}
+.rfp-doc-header h1{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:4px;}
+.rfp-doc-header h1 em{color:var(--accent);font-style:normal;}
+.rfp-subtitle{font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase;}
+
+.rfp-meta-band{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:0;
+  border-bottom:1.5px solid var(--border);
+}
+.rfp-meta-cell{
+  padding:14px 20px;
+  border-right:1px solid var(--border);
+}
+.rfp-meta-cell:last-child{border-right:none;}
+.rmc-label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:5px;}
+.rmc-input{
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:14px;
+  font-weight:600;
+  background:transparent;
+  border:none;
+  border-bottom:2px solid transparent;
+  color:var(--ink);
+  outline:none;
+  width:100%;
+  transition:border-color .15s;
+  padding:2px 0;
+}
+.rmc-input:focus{border-bottom-color:var(--accent);}
+.rmc-input::placeholder{color:var(--border);font-weight:400;}
+select.rmc-input{cursor:pointer;}
+
+/* ITEMS SECTION */
+.rfp-items-section{padding:24px 28px;}
+.rfp-section-title{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:var(--muted);
+  margin-bottom:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.rfp-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ITEM ROWS */
+.item-row{
+  display:grid;
+  grid-template-columns:28px 1fr 160px 130px 130px 1fr 32px;
+  gap:10px;
+  align-items:start;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+.item-row:last-of-type{border-bottom:none;}
+.item-row:first-of-type{padding-top:0;}
+
+.ir-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);padding-top:10px;}
+.ir-field label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);display:block;margin-bottom:4px;}
+.ir-input{
+  width:100%;
+  font-family:'IBM Plex Sans',sans-serif;
+  font-size:13px;
+  padding:8px 10px;
+  border:1.5px solid var(--border);
+  border-radius:5px;
+  background:var(--bg);
+  color:var(--ink);
+  outline:none;
+  transition:border-color .15s;
+}
+.ir-input:focus{border-color:var(--ink);}
+.ir-input.big{font-size:14px;font-weight:500;}
+
+/* UNIT SELECTOR PILLS */
+.unit-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+.upill{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  padding:4px 10px;
+  border-radius:20px;
+  border:1.5px solid var(--border);
+  background:var(--bg);
+  cursor:pointer;
+  transition:all .15s;
+  color:var(--muted);
+  white-space:nowrap;
+}
+.upill:hover{border-color:var(--ink);color:var(--ink);}
+.upill.sel{background:var(--navy);color:#f4f1eb;border-color:var(--navy);}
+
+/* VOLUME TIERS */
+.tiers-wrap{margin-top:6px;}
+.tier-mini{
+  display:grid;
+  grid-template-columns:70px 70px 1fr;
+  gap:5px;
+  margin-bottom:4px;
+  align-items:center;
+}
+.tier-mini input{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  padding:5px 7px;
+  border:1.5px solid var(--border);
+  border-radius:4px;
+  background:var(--card);
+  color:var(--ink);
+  outline:none;
+}
+.tier-mini input:focus{border-color:var(--accent);}
+.tier-label-txt{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.add-tier-link{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;}
+
+.del-row-btn{
+  margin-top:28px;
+  background:none;border:none;color:var(--border);cursor:pointer;font-size:16px;
+  transition:color .15s;padding:4px;
+}
+.del-row-btn:hover{color:var(--accent);}
+
+/* ADD ITEM BUTTON */
+.add-item-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:14px 0 0;
+}
+.add-item-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--accent);
+  background:none;
+  border:1.5px dashed var(--border);
+  padding:9px 20px;
+  border-radius:5px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.add-item-btn:hover{border-color:var(--accent);background:rgba(200,75,0,.03);}
+
+/* INSTRUCTIONS BLOCK */
+.rfp-instructions{
+  margin:0 28px 24px;
+  padding:16px 18px;
+  background:var(--tag);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:13px;
+  line-height:1.6;
+  color:var(--muted);
+}
+.rfp-instructions strong{color:var(--ink);}
+
+/* ACTION BAR */
+.rfp-action-bar{
+  padding:16px 28px;
+  background:var(--tag);
+  border-top:1.5px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.btn{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:9px 20px;border-radius:5px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;letter-spacing:.3px;}
+.btn.cancel{background:transparent;color:var(--muted);}
+.btn.cancel:hover{border-color:var(--ink);color:var(--ink);}
+.btn.ok{background:var(--navy);color:#f4f1eb;border-color:var(--navy);}
+.btn.ok:hover{background:var(--red);border-color:var(--red);}
+.btn.outline-green{background:transparent;color:var(--green);border-color:var(--green);}
+.btn.outline-green:hover{background:var(--green);color:white;}
+
+/* INGREDIENT PICKER */
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;max-height:440px;overflow-y:auto;padding:4px 2px;}
+.picker-item{
+  padding:10px 12px;
+  border:1.5px solid var(--border);
+  border-radius:6px;
+  cursor:pointer;
+  background:var(--card);
+  transition:all .15s;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.picker-item:hover{border-color:var(--ink);}
+.picker-item.picked{border-color:var(--green);background:#f0fbf5;}
+.pi-name{font-size:13px;font-weight:500;margin-bottom:2px;}
+.pi-sku{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);}
+.pi-units{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--blue);margin-top:3px;}
+.pi-cat{font-family:'IBM Plex Mono',monospace;font-size:8px;padding:2px 6px;border-radius:3px;}
+.c-spice{background:#fef3e8;color:#b8600a;}
+.c-produce{background:#e8f5ee;color:#1a6640;}
+.c-packaging{background:#e8eef8;color:#1a4566;}
+.c-dairy{background:#f8f0e8;color:#8b4513;}
+.c-tomato{background:#fce8e8;color:#991111;}
+.c-liquid{background:#e8f0f8;color:#005588;}
+.c-oil{background:#f5f0e0;color:#7a6020;}
+.c-other{background:var(--tag);color:var(--muted);}
+
+.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.cf{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;color:var(--muted);transition:all .15s;}
+.cf.on{background:var(--ink);color:#f4f1eb;border-color:var(--ink);}
+.srch{width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:10px;}
+.srch:focus{border-color:var(--ink);}
+
+/* ─── STAGE 2 : SUPPLIERS ─── */
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.sup-card{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:16px 18px;box-shadow:var(--sh);}
+.status-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 10px;border-radius:20px;border:1px solid;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s;}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;}
+.st-pending{color:var(--muted);border-color:var(--border);background:var(--tag);}
+.st-sent{color:var(--blue);border-color:#c0d4e8;background:#eaf3fb;}
+.st-accepted{color:var(--green);border-color:#b0d8c0;background:#e8f5ee;}
+.st-declined{color:var(--accent);border-color:#f0c4b0;background:#fdf0eb;}
+.st-quoted{color:var(--yellow);border-color:#e0c870;background:#fdf8e4;}
+
+/* ─── STAGE 3 : RESPONSES TABLE ─── */
+.rtable{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;}
+.rtable th{
+  font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;
+  letter-spacing:.8px;padding:10px 14px;background:var(--ink);color:#f4f1eb;
+  text-align:left;white-space:nowrap;position:sticky;top:52px;
+}
+.rtable th:first-child{border-radius:4px 0 0 0;min-width:180px;}
+.rtable th:nth-child(2){min-width:130px;}
+.rtable th:last-child{border-radius:0 4px 0 0;}
+.rtable td{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--card);vertical-align:middle;}
+.rtable tr:hover td{background:#faf9f6;}
+.rtable tr.tot td{background:var(--tag)!important;border-top:2px solid var(--border)!important;font-weight:700;}
+
+.qc{border:1.5px solid var(--border);border-radius:5px;padding:8px 10px;background:var(--bg);cursor:pointer;position:relative;transition:border-color .15s;min-width:160px;}
+.qc:hover{border-color:var(--ink);}
+.qc.win{border-color:var(--green);background:#f0fbf5;}
+.qc.hi{border-color:#f0c4b0;background:#fdf5f2;}
+.qc.nq{background:transparent;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;min-height:54px;}
+.qc-p{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;line-height:1;}
+.qc-p.wc{color:var(--green);}
+.qc-p.hc{color:var(--accent);}
+.qc-sub{display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap;}
+.qc-u{font-family:'IBM Plex Mono',monospace;font-size:9px;background:var(--tag);padding:1px 5px;border-radius:2px;color:var(--muted);border:1px solid var(--border);}
+.qc-t{font-size:10px;color:var(--muted);}
+.qc-note{font-size:10px;color:var(--muted);font-style:italic;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;}
+.win-tag{position:absolute;top:-1px;right:-1px;font-family:'IBM Plex Mono',monospace;font-size:8px;background:var(--green);color:white;padding:2px 5px;border-radius:0 4px 0 4px;}
+
+/* KEYCHAINS */
+.kcs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.kc{display:flex;align-items:center;gap:9px;background:var(--card);border:1.5px solid var(--border);padding:8px 16px;border-radius:40px;box-shadow:var(--sh);}
+.kc-ring{width:8px;height:8px;border-radius:50%;border:2px solid var(--accent);flex-shrink:0;}
+.kc-lab{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.kc-val{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+
+/* ANALYSIS */
+.rank-card{background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:14px 18px;margin-bottom:10px;box-shadow:var(--sh);}
+.rank-card.win{border-color:var(--green);}
+.rbar{height:6px;background:var(--tag);border-radius:3px;overflow:hidden;margin-top:8px;}
+.rbar-fill{height:100%;border-radius:3px;background:var(--border);transition:width 1s;}
+.rbar-fill.wf{background:var(--green);}
+
+/* MODAL */
+.ov{display:none;position:fixed;inset:0;background:rgba(28,26,22,.65);z-index:400;align-items:center;justify-content:center;}
+.ov.open{display:flex;}
+.modal{background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:26px;width:560px;max-width:96vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:16px;}
+.modal h2 em{color:var(--accent);font-style:normal;}
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+.fg input,.fg select{width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:13px;padding:8px 11px;border:1.5px solid var(--border);border-radius:5px;background:var(--bg);color:var(--ink);outline:none;transition:border-color .15s;}
+.fg input:focus,.fg select:focus{border-color:var(--ink);}
+.fgr{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ma{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+.chint{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--blue);background:#eaf3fb;border:1px solid #c0d4e8;padding:6px 10px;border-radius:4px;margin-top:5px;}
+
+/* PRINT / PREVIEW */
+@media print {
+  .topbar,.pipeline,.rfp-action-bar,.add-item-row,.del-row-btn,.add-tier-link,#projectBar{display:none!important;}
+  .rfp-doc{box-shadow:none;border:none;}
+  body{background:white;}
+  select{border:none!important;background:transparent!important;-webkit-appearance:none;appearance:none;}
+}
+@media(max-width:700px){
+  .item-row{grid-template-columns:24px 1fr 1fr;grid-template-rows:auto auto auto;}
+  .main{padding:14px;}
+  .topbar{padding:0 14px;}
+  .pipeline{padding:14px 14px 0;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="./index.html" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#fff;text-decoration:none;letter-spacing:1px;padding:6px 14px;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:4px;transition:all .18s;display:inline-flex;align-items:center;gap:6px;" onmouseover="this.style.background='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.background='rgba(255,255,255,.12)';this.style.borderColor='rgba(255,255,255,.3)'">← Home</a>
+    <div class="logo">YO MAMA<em>'S</em> · RFP</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="tbtn" onclick="newRFP()">+ New RFP</button>
+    <button class="tbtn" onclick="openSupPickerModal()">+ Supplier</button>
+    <button id="gmailBtn" class="tbtn" onclick="isGmailConnected()?null:connectGmail()">📧 Connect Gmail</button>
+    <button class="tbtn ac" onclick="exportTxt()">↓ Export</button>
+  </div>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px;padding:12px 28px;background:var(--bg);border-bottom:1px solid var(--border);overflow-x:auto;" id="projectBar"></div>
+<div class="pipeline" id="pipeBar"></div>
+<div class="main" id="mainArea"></div>
+
+<!-- INGREDIENT PICKER MODAL -->
+<div class="ov" id="pickerOv">
+<div class="modal" style="width:700px;">
+  <h2>Add <em>Items</em> to RFP</h2>
+  <input class="srch" id="pickerSearch" placeholder="Search ingredient or SKU…" oninput="renderPicker()"/>
+  <div class="cat-filter" id="pickerCats"></div>
+  <div class="picker-grid" id="pickerGrid"></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="confirmPicker()">Add Selected →</button>
+  </div>
+</div>
+</div>
+
+<!-- EMAIL PREVIEW MODAL -->
+<div class="ov" id="emailPreviewOv">
+<div class="modal" style="width:680px;max-height:88vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="margin:0;">📧 Send <em>RFP</em></h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+
+  <!-- To / CC / Subject -->
+  <div style="background:var(--tag);border:1px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:14px;font-size:13px;">
+    <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;align-items:baseline;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">To</span>
+      <span id="emailPreviewTo" style="font-weight:600;color:var(--navy);"></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">CC</span>
+      <span id="emailPreviewCc" style="color:var(--muted);font-size:12px;"></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Subject</span>
+      <span id="emailPreviewSubject" style="font-weight:500;"></span>
+    </div>
+  </div>
+
+  <!-- Body preview -->
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:16px;max-height:340px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;color:var(--ink);" id="emailPreviewBody"></div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+    <button onclick="openInGmail()" id="sendEmailBtn"
+      style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 20px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;font-weight:600;"
+      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      Send Email
+    </button>
+    <button id="copyBodyBtn" onclick="copyEmailBody()"
+      style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 18px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+      📋 Copy Body
+    </button>
+    <button onclick="closeAll()" class="btn cancel">Cancel</button>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-align:center;margin-top:10px;">
+    "Open in Gmail" opens a new tab with the email pre-filled — just review and hit Send
+  </div>
+</div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="ov" id="newProjOv">
+<div class="modal" style="width:400px;">
+  <h2>New <em>Project</em></h2>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;">Each project is a separate RFP with its own items, suppliers and quotes</p>
+  <div class="fg"><label>Project Name</label><input id="newProjName" placeholder="e.g. Q2 Packaging, Sauce Line Ingredients…" onkeydown="if(event.key==='Enter')confirmNewProject()"/></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="confirmNewProject()">Create Project</button>
+  </div>
+</div>
+</div>
+
+<!-- EMAIL PREVIEW MODAL -->
+<div class="ov" id="emailPreviewOv">
+<div class="modal" style="width:680px;max-height:88vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="margin:0;">📧 Send <em>RFP</em></h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+
+  <!-- To / CC / Subject -->
+  <div style="background:var(--tag);border:1px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:14px;font-size:13px;">
+    <div style="display:grid;grid-template-columns:60px 1fr;gap:6px;align-items:baseline;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">To</span>
+      <span id="emailPreviewTo" style="font-weight:600;color:var(--navy);"></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">CC</span>
+      <span id="emailPreviewCc" style="color:var(--muted);font-size:12px;"></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Subject</span>
+      <span id="emailPreviewSubject" style="font-weight:500;"></span>
+    </div>
+  </div>
+
+  <!-- Body preview -->
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:16px;max-height:340px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;color:var(--ink);" id="emailPreviewBody"></div>
+
+  <!-- Actions -->
+  <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+    <button onclick="openInGmail()" id="sendEmailBtn"
+      style="flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 20px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;font-weight:600;"
+      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      Send Email
+    </button>
+    <button id="copyBodyBtn" onclick="copyEmailBody()"
+      style="font-family:'IBM Plex Mono',monospace;font-size:12px;padding:11px 18px;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;transition:all .2s;"
+      onmouseover="this.style.opacity=.85" onmouseout="this.style.opacity=1">
+      📋 Copy Body
+    </button>
+    <button onclick="closeAll()" class="btn cancel">Cancel</button>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-align:center;margin-top:10px;">
+    "Open in Gmail" opens a new tab with the email pre-filled — just review and hit Send
+  </div>
+</div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div class="ov" id="newProjOv">
+<div class="modal" style="width:400px;">
+  <h2>New <em>Project</em></h2>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;">Each project is a separate RFP with its own items, suppliers and quotes</p>
+  <div class="fg"><label>Project Name</label><input id="newProjName" placeholder="e.g. Q2 Packaging, Sauce Line Ingredientsâ¦" onkeydown="if(event.key==='Enter')confirmNewProject()"/></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="confirmNewProject()">Create Project</button>
+  </div>
+</div>
+</div>
+
+<!-- SUPPLIER PICKER MODAL -->
+<div class="ov" id="supPickerOv">
+<div class="modal" style="width:680px;">
+  <h2>Add <em>Suppliers</em></h2>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:14px;">Select from your supplier list or add a new one manually</p>
+  <input class="srch" id="supSearch" placeholder="Search by name or email…" oninput="renderSupPicker()"/>
+  <div class="picker-grid" id="supPickerGrid" style="max-height:380px;"></div>
+  <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <button class="btn cancel" onclick="closeAll();openSupModal()">+ Add New Supplier Manually</button>
+    <div class="ma" style="margin:0;">
+      <button class="btn cancel" onclick="closeAll()">Cancel</button>
+      <button class="btn ok" onclick="confirmSupPicker()">Add Selected →</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- SUPPLIER MODAL -->
+<div class="ov" id="supOv">
+<div class="modal" style="width:440px;">
+  <h2>New <em>Supplier</em></h2>
+  <div class="fg"><label>Company Name</label><input id="sName" placeholder="e.g. American Ingredients Co."/></div>
+  <div class="fgr">
+    <div class="fg"><label>Contact</label><input id="sCont" placeholder="Jane Smith"/></div>
+    <div class="fg"><label>Email (separate multiple with commas)</label><input id="sEmail" placeholder="primary@company.com, cc@company.com"/></div>
+  </div>
+  <div class="fg"><label>Phone</label><input id="sTel" placeholder="+1 800 000 0000"/></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="saveSupplier()">Add Supplier</button>
+  </div>
+</div>
+</div>
+
+<!-- QUOTE MODAL -->
+<div class="ov" id="quoteOv">
+<div class="modal">
+  <h2>Record <em>Quote</em></h2>
+  <div id="qCtx" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;padding:10px 12px;background:var(--tag);border-radius:5px;line-height:1.6;"></div>
+
+  <div class="fg" style="margin-bottom:10px;">
+    <label>Pricing Type</label>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="upill sel" id="ptFlat" onclick="setPT('flat')">Flat Price</button>
+      <button class="upill" id="ptTier" onclick="setPT('tier')">Volume Tiers</button>
+    </div>
+  </div>
+
+  <div id="flatSec">
+    <div class="fgr">
+      <div class="fg"><label>Unit Price</label><input id="qPrice" type="number" step="0.0001" placeholder="0.00" oninput="updHint()"/></div>
+      <div class="fg"><label>Currency</label><select id="qCur"><option>USD</option><option>MXN</option><option>EUR</option></select></div>
+    </div>
+  </div>
+
+  <div id="tierSec" style="display:none;">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">FROM qty — TO qty — Price per unit — Currency</div>
+    <div id="tierRows2"></div>
+    <button class="add-tier-link" onclick="addQTier()">+ add tier</button>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-top:6px;">e.g. 0 → 49 GL: $12.00 | 50 → 75 GL: $10.50</div>
+  </div>
+
+  <div class="fgr" style="margin-top:10px;">
+    <div class="fg"><label>Qty Offered</label><input id="qQty" type="number" placeholder="Same as requested"/></div>
+    <div class="fg"><label>Supplier's Unit</label>
+      <select id="qUnit" onchange="updHint()">
+        <option>GL</option><option>LB</option><option>KG</option><option>OZ</option>
+        <option>Tote</option><option>Drum</option><option>Case</option><option>Pallet</option>
+        <option>RL</option><option>Units</option><option>each</option>
+      </select>
+    </div>
+  </div>
+  <div id="convHint" class="chint" style="display:none;"></div>
+  <div class="fgr">
+    <div class="fg"><label>Lead Time</label><input id="qLead" placeholder="e.g. 10 business days"/></div>
+    <div class="fg"><label>Payment Terms</label><input id="qPay" placeholder="e.g. Net 30"/></div>
+  </div>
+  <div class="fg"><label>Notes</label><input id="qNotes" placeholder="e.g. Freight included, COA provided"/></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="saveQuote()">Save Quote</button>
+  </div>
+</div>
+</div>
+
+<!-- STATUS MODAL -->
+<div class="ov" id="stOv">
+<div class="modal" style="width:300px;">
+  <h2>Set <em>Status</em></h2>
+  <p id="stName" style="font-weight:600;margin-bottom:14px;"></p>
+  <div style="display:grid;gap:8px;" id="stOpts"></div>
+  <div class="ma"><button class="btn cancel" onclick="closeAll()">Cancel</button></div>
+</div>
+</div>
+
+<!-- CUSTOM ITEM MODAL -->
+<div class="ov" id="customOv">
+<div class="modal" style="width:440px;">
+  <h2>Custom <em>Item</em></h2>
+  <p style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;">Add an ingredient or material not in the catalog</p>
+  <div class="fg"><label>Item Name / Description</label><input id="ciName" placeholder="e.g. Xanthan Gum, Food Grade"/></div>
+  <div class="fgr">
+    <div class="fg"><label>Quantity Needed</label><input id="ciQty" type="number" step="0.01" placeholder="e.g. 500"/></div>
+    <div class="fg"><label>Unit</label>
+      <select id="ciUnit">
+        <option>LB</option><option>KG</option><option>OZ</option><option>GL</option>
+        <option>Tote</option><option>Drum</option><option>Case</option><option>Pallet</option>
+        <option>RL</option><option>Units</option><option>each</option><option>Ton</option>
+      </select>
+    </div>
+  </div>
+  <div class="fg"><label>Specs / Notes for Supplier</label><input id="ciSpecs" placeholder="e.g. Food grade, COA required, min 95% purity"/></div>
+  <div class="ma">
+    <button class="btn cancel" onclick="closeAll()">Cancel</button>
+    <button class="btn ok" onclick="saveCustomItem()">Add to RFP</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── CATALOG ─────────────────────────────────────────────────
+const CATALOG = [
+  {id:'c01',name:'Bay Leaves, Ground',cat:'spice',sku:'BAY-GRD',units:['LB','KG','OZ'],def:'LB'},
+  {id:'c02',name:'Black Pepper',cat:'spice',sku:'BLK-PEP',units:['LB','KG'],def:'LB'},
+  {id:'c03',name:'Cayenne Pepper, Ground',cat:'spice',sku:'CAY-GRD',units:['LB','KG'],def:'LB'},
+  {id:'c04',name:'Chili Powder',cat:'spice',sku:'CHILI-PW',units:['LB','KG'],def:'LB'},
+  {id:'c05',name:'Chili Powder, Dark Ground',cat:'spice',sku:'CHILI-DK',units:['LB','KG'],def:'LB'},
+  {id:'c06',name:'Chipotle Powder, Ground',cat:'spice',sku:'CHIP-PW',units:['LB','KG'],def:'LB'},
+  {id:'c07',name:'Garlic, Granulated',cat:'spice',sku:'GAR-GRN',units:['LB','KG'],def:'LB'},
+  {id:'c08',name:'Garlic, Powder',cat:'spice',sku:'GAR-PW',units:['LB','KG'],def:'LB'},
+  {id:'c09',name:'Latin Spice Blend',cat:'spice',sku:'LAT-BLD',units:['LB','KG'],def:'LB'},
+  {id:'c10',name:'Monk Fruit V25 (Monksweet)',cat:'spice',sku:'MNK-V25',units:['KG','LB'],def:'KG'},
+  {id:'c11',name:'Onion Powder',cat:'spice',sku:'ONI-PW',units:['LB','KG'],def:'LB'},
+  {id:'c12',name:'Onion, Granulated',cat:'spice',sku:'ONI-GRN',units:['LB','KG'],def:'LB'},
+  {id:'c13',name:'Paprika, Ground 120A',cat:'spice',sku:'PAP-120',units:['LB','KG'],def:'LB'},
+  {id:'c14',name:'Spice Blend, Basil',cat:'spice',sku:'BLD-BSL',units:['LB','KG','Units'],def:'LB'},
+  {id:'c15',name:'Spice Blend, Marinara/Chianti/Burg',cat:'spice',sku:'BLD-MAR',units:['LB','KG'],def:'LB'},
+  {id:'c16',name:'Spice Blend, Pizza',cat:'spice',sku:'BLD-PIZ',units:['LB','KG'],def:'LB'},
+  {id:'p01',name:'Aseptic Carrot Puree',cat:'produce',sku:'CAR-PUR',units:['LB','KG','Drum'],def:'LB'},
+  {id:'p02',name:'Cayenne Pepper Base, Bulk LSE',cat:'produce',sku:'CAY-LSE',units:['LB','Tote'],def:'Tote',note:'2,500 LB/Tote'},
+  {id:'p03',name:'Cayenne Pepper Puree (Mash)',cat:'produce',sku:'CAY-PUR',units:['LB','Drum'],def:'Drum'},
+  {id:'p04',name:'Garlic, Diced in Water (30lb Pail)',cat:'produce',sku:'GAR-DCD',units:['LB','Case'],def:'LB'},
+  {id:'p05',name:'Onion, Cooked Type R 6mm Dice',cat:'produce',sku:'ONI-DCE',units:['Units','LB','Case'],def:'Units'},
+  {id:'t01',name:'Tomato, Crushed',cat:'tomato',sku:'TOM-CRS',units:['LB','Drum'],def:'Drum'},
+  {id:'t02',name:'Tomato, Diced',cat:'tomato',sku:'TOM-DCE',units:['LB','Tote'],def:'Tote'},
+  {id:'t03',name:'Tomato, Paste Fine',cat:'tomato',sku:'TOM-PST',units:['LB','Drum'],def:'Drum'},
+  {id:'d01',name:'Butter',cat:'dairy',sku:'BTR-STD',units:['LB','KG','Case'],def:'LB'},
+  {id:'d02',name:'Cream',cat:'dairy',sku:'CRM-STD',units:['Units','GL','LB'],def:'Units'},
+  {id:'d03',name:'Parmesan, Romano, Asiago, Fontina',cat:'dairy',sku:'CHS-MIX',units:['LB','KG'],def:'LB'},
+  {id:'d04',name:'Romano Cheese, Grated',cat:'dairy',sku:'ROM-GRT',units:['LB','KG'],def:'LB'},
+  {id:'l01',name:'Apple Cider Vinegar',cat:'liquid',sku:'ACV-STD',units:['GL','LB','Case'],def:'GL'},
+  {id:'l02',name:'Hickory Liquid Smoke',cat:'liquid',sku:'SMK-HCK',units:['GL','LB'],def:'GL',note:'50–75 GL/quarter'},
+  {id:'l03',name:'Vodka',cat:'liquid',sku:'VOD-STD',units:['GL','Tote'],def:'Tote'},
+  {id:'l04',name:'White Cooking Wine',cat:'liquid',sku:'WCW-STD',units:['GL','Tote'],def:'Tote'},
+  {id:'o01',name:'Pomace Olive Oil',cat:'oil',sku:'OIL-PMC',units:['Tote','GL','LB'],def:'Tote'},
+  {id:'k01',name:'Jar, 12.5 oz Paragon',cat:'packaging',sku:'JAR-125',units:['Units','Case','Pallet'],def:'Case'},
+  {id:'k02',name:'Jar, 12oz Ring Neck',cat:'packaging',sku:'JAR-12R',units:['Units','Case'],def:'Case'},
+  {id:'k03',name:'Jar, 16oz Paragon 63mm',cat:'packaging',sku:'JAR-16P',units:['Units','Case','Pallet'],def:'Case'},
+  {id:'k04',name:'Jar, 24oz Lug/Flint 63mm',cat:'packaging',sku:'JAR-24L',units:['Units','Case','Pallet'],def:'Case'},
+  {id:'k05',name:'Jar, 32oz Lug/Flint 63mm',cat:'packaging',sku:'JAR-32L',units:['Units','Case','Pallet'],def:'Case'},
+  {id:'k06',name:'Cap, 63mm Lug White #10087',cat:'packaging',sku:'CAP-63W',units:['Units','Case','Pallet'],def:'Case',note:'1,300/cs'},
+  {id:'k07',name:'38mm Caps',cat:'packaging',sku:'CAP-38',units:['Units','Case','Pallet'],def:'Case'},
+  {id:'k08',name:'Shrink, Roll 72mm',cat:'packaging',sku:'SHR-72',units:['RL','Case'],def:'RL'},
+  {id:'k09',name:"Shrink, Custom Yo Mama's 70mm",cat:'packaging',sku:'SHR-YM',units:['RL'],def:'RL'},
+  {id:'k10',name:'Box, Custom 16oz Paragon Shipper',cat:'packaging',sku:'BOX-16P',units:['Units','Case'],def:'Case'},
+  {id:'k11',name:'Box, Custom 6pk Sauce',cat:'packaging',sku:'BOX-6S',units:['Units','Case'],def:'Case'},
+  {id:'k12',name:'Box, Custom 6pk Dressing',cat:'packaging',sku:'BOX-6D',units:['Units','Case'],def:'Case'},
+  {id:'k13',name:'Tray, 6pk Retail Boves',cat:'packaging',sku:'TRY-BV6',units:['Units','Case'],def:'Case'},
+  {id:'k14',name:'Tray, Costco RG #27271',cat:'packaging',sku:'TRY-CST',units:['Units','Case'],def:'Case'},
+  {id:'k15',name:"Tray, Sam's Club Garlic #201153",cat:'packaging',sku:'TRY-SAM',units:['Units','Case'],def:'Case'},
+  {id:'k16',name:'Label',cat:'packaging',sku:'LBL-STD',units:['each','Case','Roll'],def:'Case'},
+  {id:'k17',name:'Paper, Roll',cat:'packaging',sku:'PPR-RL',units:['RL'],def:'RL'},
+  {id:'k18',name:'Twin Pack Paper Handles 25oz',cat:'packaging',sku:'HDL-TWN',units:['Units','Case'],def:'Case'},
+];
+
+const CATS_MAP={spice:'Spices & Dry',produce:'Produce & Purees',tomato:'Tomato',dairy:'Dairy',liquid:'Liquids',oil:'Oils',packaging:'Packaging'};
+const CAT_CLS={spice:'c-spice',produce:'c-produce',tomato:'c-tomato',dairy:'c-dairy',liquid:'c-liquid',oil:'c-oil',packaging:'c-packaging'};
+
+// ── PRESET SUPPLIERS ────────────────────────────────────────
+const PRESET_SUPPLIERS_TEMPLATE = [
+  {name:"Ardaugh",email:"john.orr@ardaghgroup.com",otherEmails:[]},
+  {name:"BCI Packaging",email:"tolsen@bcipkg.com",otherEmails:[]},
+  {name:"Berlin Packaging LLC",email:"craig.crowe@berlinpackaging.com",otherEmails:["gery.fregonese@berlinpackaging.com"]},
+  {name:"Bove Brothers Milton LLC",email:"justin@boves.com",otherEmails:[]},
+  {name:"Butter Buds Inc",email:"kstuart@bbuds.com",otherEmails:[]},
+  {name:"Catapult Print",email:"heidi.blackamore@catapultprint.com",otherEmails:["louise.barnett@catapultprint.com","gregory.wright@catapultprint.com"]},
+  {name:"Cheese Merchants",email:"parker@cheesemerchants.com",otherEmails:[]},
+  {name:"Elite Spices Inc",email:"afineagan@elitespice.com",otherEmails:["jkurpe@elitespice.com"]},
+  {name:"Fleischmann's Vinegar (Kerry)",email:"csr@fvinegar.com",otherEmails:[]},
+  {name:"Garland Food",email:"bsalima@garlandfood.net",otherEmails:["pgalavis@garlandfood.net"]},
+  {name:"Hester Tag & Label",email:"jimhester@htlprinting.com",otherEmails:[]},
+  {name:"Hudson Trading Group",email:"jenn@hudsontraders.com",otherEmails:["jack@hudsontraders.com"]},
+  {name:"Kerry Select",email:"george.johnson@kerryselect.com",otherEmails:["customercarena@kerry.com","jordan.brovidk@kerry.com","stephanie.wottreng@kerry.com","arvind.srinivasan@kerry.com"]},
+  {name:"Knichel Logistics Inc",email:"anale@knichellogistics.com",otherEmails:["teamsteel@knichellogistics.com"]},
+  {name:"Loisa",email:"opsteam@loisa.com",otherEmails:[]},
+  {name:"Louisiana Pepper Exchange",email:"michael@lapepperexchange.com",otherEmails:[]},
+  {name:"Magic Plant Farms",email:"erez@magicplantfarms.com",otherEmails:[]},
+  {name:"Mandia",email:"jmalek@mandiacorp.com",otherEmails:["salesorders@mandiacorp.com"]},
+  {name:"Morningstar",email:"mgreer@morningstarco.com",otherEmails:["akrueger@morningstarco.com"]},
+  {name:"Nutra Max",email:"selia@nutra-max.com",otherEmails:[]},
+  {name:"O-I Glass",email:"ju.whse@o-i.com",otherEmails:["lori.thornhill@o-i.com"]},
+  {name:"Old Dutch Mustard",email:"customerservice@olddutchmustard.com",otherEmails:["wahmad@olddutchmustard.com","tmailloux@olddutchmustard.com"]},
+  {name:"Packaging Corp of America",email:"stephaniefinney@packagingcorp.com",otherEmails:[]},
+  {name:"Palmetto Canning",email:"ccreider@palmettocanning.com",otherEmails:["spencer@palmettocanning.com"]},
+  {name:"Pratt Corrugated Holdings",email:"kcates@prattindustries.com",otherEmails:[]},
+  {name:"Red Oak Foods",email:"christophe.hervieu@redoakfoods.net",otherEmails:[]},
+  {name:"Revival",email:"louise.barnett@catapultprint.com",otherEmails:[]},
+  {name:"Schneider",email:"mejiae@schneider.com",otherEmails:[]},
+  {name:"Shrink Solutions",email:"cberry@shrinksolutions.com",otherEmails:[]},
+  {name:"Smurfit Westrock",email:"jake.sadd@smurfitwestrock.com",otherEmails:[]},
+  {name:"Supplyone",email:"rhoffer@supplyone.com",otherEmails:["chaines@supplyone.com"]},
+  {name:"Sysco Albany LLC",email:"devin.quinn@sysco.com",otherEmails:[]},
+  {name:"TricorBraun Inc",email:"leif.wahlquist@tricorbraun.com",otherEmails:["bill.fitzgerald@tricorbraun.com"]}
+];
+
+const STAGES=['RFP FORM','SUPPLIERS','RESPONSES','ANALYSIS'];
+const ST_L={pending:'Pending',sent:'Sent',accepted:'Accepted',declined:'Declined',quoted:'Quoted'};
+const ST_C={pending:'st-pending',sent:'st-sent',accepted:'st-accepted',declined:'st-declined',quoted:'st-quoted'};
+
+const UCONV={GL:3.78541,LB:0.453592,KG:1,OZ:0.0283495,Tote:1000,Drum:200,Case:1,Pallet:1,RL:1,Units:1,each:1};
+const UG={wt:['LB','KG','OZ'],vol:['GL','Tote','Drum']};
+function sameG(a,b){return Object.values(UG).some(g=>g.includes(a)&&g.includes(b));}
+function cvp(p,f,t){if(f===t)return p;const r=(UCONV[f]||1)/(UCONV[t]||1);return r?p/r:null;}
+
+// ── MULTI-PROJECT SYSTEM ────────────────────────────────────
+function getNextRFPNumber(){
+  const year = new Date().getFullYear();
+  const key = `rfp_counter_${year}`;
+  const current = parseInt(localStorage.getItem(key)||'0');
+  const next = current + 1;
+  localStorage.setItem(key, next);
+  return `RFP-${year}-${String(next).padStart(3,'0')}`;
+}
+
+function freshProject(name){
+  return {
+    id: uid(),
+    projectName: name || 'New Project',
+    stage:0,
+    rfpName:'',
+    rfpNumber: getNextRFPNumber(),
+    rfpDate: new Date().toISOString().split('T')[0],
+    rfpDeadline:'',
+    rfpNote:'',
+    items:[],
+    suppliers:[],
+    quotes:{},
+  };
+}
+
+// Load projects from localStorage
+function loadProjects(){
+  try {
+    const saved = localStorage.getItem('ym_rfp_projects');
+    if(saved){
+      const parsed = JSON.parse(saved);
+      if(parsed.projects && parsed.projects.length > 0){
+        projects = parsed.projects;
+        activeProjectId = parsed.activeProjectId || projects[0].id;
+        state = projects.find(p=>p.id===activeProjectId) || projects[0];
+        return;
+      }
+    }
+  } catch(e){}
+  // First time — create default project
+  const p = freshProject('My First RFP');
+  projects = [p];
+  activeProjectId = p.id;
+  state = p;
+  saveProjects();
+}
+
+function saveProjects(){
+  const idx=projects.findIndex(p=>p.id===activeProjectId);
+  if(idx>=0) projects[idx]=state;
+  try{localStorage.setItem('ym_rfp_projects',JSON.stringify({projects,activeProjectId}));}catch(e){}
+  clearTimeout(window._saveTimer);
+  window._saveTimer=setTimeout(()=>saveProjectToCloud(),2000);
+}
+
+function switchProject(id){
+  saveProjects();
+  activeProjectId = id;
+  state = projects.find(p=>p.id===id);
+  closeAll();
+  render();
+}
+
+function createProject(name){
+  saveProjects();
+  const p = freshProject(name || 'New Project');
+  projects.push(p);
+  activeProjectId = p.id;
+  state = p;
+  saveProjects();
+  render();
+}
+
+function deleteProject(id){
+  if(projects.length === 1){ alert('Cannot delete the only project.'); return; }
+  projects = projects.filter(p=>p.id!==id);
+  if(activeProjectId === id){
+    activeProjectId = projects[0].id;
+    state = projects[0];
+  }
+  saveProjects();
+  render();
+}
+
+let projects = [];
+let activeProjectId = null;
+let editCtx=null;
+let pickerSel=new Set();
+let pickerCat='all';
+let qTiers=[];
+let pricingType='flat';
+function uid(){return Math.random().toString(36).slice(2,8);}
+
+// ── SUPABASE ─────────────────────────────────────────────────
+const SUPA_URL='https://ceasqangdyysnejfpgfz.supabase.co';
+const NETLIFY_URL='https://ka431503.github.io/yomamasrfp';
+const SUPA_KEY='sb_publishable_pKu7K-Y1o-aizvopTZu3dQ_0blkwgQ3';
+
+// ── GMAIL API ────────────────────────────────────────────────
+const GMAIL_CLIENT_ID = '36671389217-mqha9lh498ogab4q0qobpl0ulu1nqqon.apps.googleusercontent.com';
+const GMAIL_REDIRECT_URI = 'https://ka431503.github.io/yomamasrfp/auth.html';
+const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.send';
+let gmailAccessToken = null;
+
+function getGmailToken() {
+  return sessionStorage.getItem('gmail_access_token');
+}
+
+function setGmailToken(token) {
+  sessionStorage.setItem('gmail_access_token', token);
+  gmailAccessToken = token;
+}
+
+function isGmailConnected() {
+  return !!getGmailToken();
+}
+
+function connectGmail() {
+  const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+    'client_id=' + GMAIL_CLIENT_ID +
+    '&redirect_uri=' + encodeURIComponent(GMAIL_REDIRECT_URI) +
+    '&response_type=token' +
+    '&scope=' + encodeURIComponent(GMAIL_SCOPE) +
+    '&prompt=consent' +
+    '&login_hint=purchasing@yomamasfoods.com';
+  window.location.href = authUrl;
+}
+
+async function sendGmailEmail(to, cc, subject, plainBody) {
+  const token = getGmailToken();
+  if(!token) { connectGmail(); return false; }
+
+  // Build simple plain-text RFC 2822 email - no HTML to avoid rendering issues
+  const lines = [];
+  lines.push('From: Yo Mamas Foods Purchasing <purchasing@yomamasfoods.com>');
+  lines.push('To: ' + to);
+  if(cc) lines.push('Cc: ' + cc);
+  lines.push('Subject: ' + subject);
+  lines.push('MIME-Version: 1.0');
+  lines.push('Content-Type: text/plain; charset=UTF-8');
+  lines.push('Content-Transfer-Encoding: 7bit');
+  lines.push('');
+  lines.push(plainBody);
+
+  const mimeMsg = lines.join('\r\n');
+  const encoded = btoa(unescape(encodeURIComponent(mimeMsg)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  try {
+    const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ raw: encoded })
+    });
+
+    if(res.status === 401) {
+      sessionStorage.removeItem('gmail_access_token');
+      connectGmail();
+      return false;
+    }
+
+    const data = await res.json();
+    return data.id ? true : false;
+  } catch(e) {
+    console.error('Gmail send error:', e);
+    return false;
+  }
+}
+
+
+async function openInGmail(){
+  const p = window._rfpEmailPreview;
+  if(!p) return;
+  
+  // Try Gmail API first
+  if(isGmailConnected()) {
+    const btn = document.querySelector('#emailPreviewOv .btn-primary, #emailPreviewOv button[onclick*="openInGmail"]');
+    if(btn){ btn.textContent = 'Sending...'; btn.disabled = true; }
+    
+    const sent = await sendGmailEmail(p.to, p.cc||'', p.subject, p.body);
+    
+    if(sent) {
+      const sup = state.suppliers.find(s=>s.id===p.supId);
+      if(sup) { sup.status='sent'; }
+      saveProjects();
+      closeAll();
+      render();
+      // Show success
+      setTimeout(()=>{
+        const banner = document.createElement('div');
+        banner.innerHTML = '<div style="position:fixed;top:70px;right:20px;background:#1a6640;color:white;padding:12px 20px;border-radius:8px;font-family:IBM Plex Mono,monospace;font-size:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);">✓ Email sent to '+p.to+'</div>';
+        document.body.appendChild(banner);
+        setTimeout(()=>banner.remove(), 4000);
+      }, 100);
+    } else {
+      if(btn){ btn.textContent = 'Open in Gmail'; btn.disabled = false; }
+    }
+  } else {
+    // Not connected - connect Gmail first
+    window._pendingEmailSupId = p.supId;
+    if(confirm('Connect Gmail to send emails directly from purchasing@yomamasfoods.com?\n\nClick OK to authorize Gmail access.')) {
+      connectGmail();
+    } else {
+      // Fallback to Gmail compose URL
+      const gmailUrl = 'https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(p.to)+'&cc='+encodeURIComponent(p.cc||'')+'&su='+encodeURIComponent(p.subject)+'&body='+encodeURIComponent(p.body);
+      window.open(gmailUrl, '_blank');
+      closeAll();
+    }
+  }
+}
+
+async function sendRFP(supId){
+  const sup = state.suppliers.find(s=>s.id===supId);
+  if(!sup) return;
+
+  await saveProjectToCloud();
+  const _token = await generateSupplierToken(supId);
+  console.log('Generated token:', _token);
+  const responseLink = _token ? (NETLIFY_URL+'/respond.html?token='+_token) : null;
+  console.log('Response link:', responseLink);
+
+  const deadline = state.rfpDeadline ? new Date(state.rfpDeadline+' ').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '[DEADLINE TBD]';
+  const rfpNum = state.rfpNumber || 'RFP-2026-001';
+  const issueDate = state.rfpDate ? new Date(state.rfpDate+' ').toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'}) : '[Issue Date]';
+
+  const itemLines = state.items.map((it,i)=>{
+    const cat = CATALOG.find(c=>c.id===it.catId);
+    const name = cat ? cat.name : (it.name||'Custom Item');
+    const qty = it.qty ? `${new Intl.NumberFormat('en-US').format(it.qty)} ${it.unit} (${it.period||'Annual'})` : 'TBD';
+    const delivery = it.delivery==='Other'?(it.deliveryOther||'Other'):(it.delivery||'Clearwater, FL');
+    const specs = it.specs || '';
+    const packaging = it.packaging || '';
+    const attach = it.attachments?.length ? `[Spec sheet: ${it.attachments.map(a=>a.name).join(', ')}]` : '';
+    return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
+      Estimated Volume: ${qty}
+      Delivery Location: ${delivery}${packaging?' | Packaging: '+packaging:''}${specs?' | Specs: '+specs:''}${attach?' '+attach:''}`;
+  }).join('\n\n');
+
+  const subject = `Yo Mamas Foods - ${rfpNum} | Quote Request`;
+
+  const body =
+`Dear ${sup.contact||sup.name},
+
+Yo Mamas Foods invites you to submit a proposal for the supply of the item(s) listed below.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. INTRODUCTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Yo Mamas Foods invites qualified and experienced suppliers to submit proposals for premium-quality ingredients and materials used in our sauce production lines.
+
+The objective of this RFP (${rfpNum}) is to establish a reliable supply chain partner ensuring consistent quality, competitive pricing, and dependable delivery performance.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. COMPANY OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Yo Mamas Foods is a fast-growing gourmet food company headquartered in Clearwater, Florida, with co-packing operations in Florida and Vermont. We specialize in all-natural sauces and condiments free from preservatives and artificial ingredients.
+
+We are expanding our approved supplier network to include high-performing partners that align with our mission.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. SCOPE OF SUPPLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${itemLines}
+
+Note: Volumes may vary based on production demand.
+Pallets are required to be full bulk pallets.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. PROPOSAL REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+All proposals must include:
+  - Pricing per unit (FOB / Delivered)
+  - FOB Point: NE US or FL
+  - Lead time from PO to delivery: 2 Weeks
+  - Payment Terms: Net 60
+  - MOQ (minimum order quantity)
+  - Tariff % if applicable
+  - Sample availability for testing
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. SUBMISSION INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Issued by:         Yo Mamas Foods
+Issue Date:        ${issueDate}
+Response Deadline: ${deadline} - 5:00 PM ET
+
+Please submit your quote using the secure online form:
+${responseLink || '[please reply to this email]'}
+
+Submitting via the online form ensures your quote is received instantly and prioritized in our evaluation. The form includes all required fields from Section 4.
+
+Alternative: Email purchasing@yomamasfoods.com
+Subject: RFP Response - ${rfpNum} [${sup.name}]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. CONTACT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Katherine Ballesteros, Manufacturing Coordinator
+Nick Berry, VP of Manufacturing
+Email: purchasing@yomamasfoods.com
+Phone: 727-270-4940
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Thank you for your time. We look forward to reviewing your proposal.
+
+Warm regards,
+Purchasing Department | Yo Mamas Foods Co.
+purchasing@yomamasfoods.com | www.yomamasfoods.com`;
+
+  const cc = (sup.otherEmails||[]).join(',');
+
+  // Store for modal
+  window._rfpEmailPreview = {
+    to: sup.email,
+    cc,
+    subject,
+    body,
+    supId
+  };
+
+  // Show preview modal
+  document.getElementById('emailPreviewTo').textContent = sup.email;
+  document.getElementById('emailPreviewCc').textContent = cc || '—';
+  document.getElementById('emailPreviewSubject').textContent = subject;
+  document.getElementById('emailPreviewBody').textContent = body;
+  document.getElementById('emailPreviewOv').classList.add('open');
+}
+
+function copyEmailBody(){
+  const p = window._rfpEmailPreview;
+  if(!p) return;
+  navigator.clipboard.writeText(p.body).then(()=>{
+    const btn = document.getElementById('copyBodyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.style.background = 'var(--green)';
+    setTimeout(()=>{ btn.textContent = '📋 Copy Body'; btn.style.background = 'var(--navy)'; }, 2000);
+  });
+}
+
+// ── FILE ATTACHMENTS ─────────────────────────────────────────
+function attachFile(itemIdx, input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    if(!state.items[itemIdx].attachments) state.items[itemIdx].attachments = [];
+    state.items[itemIdx].attachments.push({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: e.target.result  // base64 data URL
+    });
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAttachment(itemIdx, attachIdx){
+  state.items[itemIdx].attachments.splice(attachIdx, 1);
+  render();
+}
+
+function openAttachment(itemIdx, attachIdx){
+  const a = state.items[itemIdx].attachments[attachIdx];
+  if(!a) return;
+  const win = window.open();
+  if(a.type === 'application/pdf'){
+    win.document.write(`<iframe src="${a.data}" style="width:100%;height:100vh;border:none;"></iframe>`);
+  } else {
+    win.document.write(`<img src="${a.data}" style="max-width:100%;"/>`);
+  }
+}
+
+function newRFP(){
+  document.getElementById('newProjName').value='';
+  document.getElementById('newProjOv').classList.add('open');
+}
+function confirmNewProject(){
+  const name = document.getElementById('newProjName').value.trim() || 'New Project';
+  createProject(name);
+  closeAll();
+}
+function fmt(n){return n==null?'—':'$'+new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);}
+function fmtPrice(n){
+  if(n==null) return '—';
+  // Use more decimals for small unit prices
+  const decimals = Math.abs(n) < 1 ? 5 : Math.abs(n) < 10 ? 4 : 2;
+  return '$'+new Intl.NumberFormat('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(n);
+}
+function fN(n){return new Intl.NumberFormat('en-US',{minimumFractionDigits:0,maximumFractionDigits:2}).format(n);}
+
+// ── PIPELINE ────────────────────────────────────────────────
+function renderPipe(){
+  document.getElementById('pipeBar').innerHTML=STAGES.map((s,i)=>{
+    const cl=i===state.stage?'active':i<state.stage?'done':'';
+    const arr=i<STAGES.length-1?`<div class="sarr"></div>`:'';
+    return `<div class="sp" onclick="goS(${i})"><div class="spill ${cl}"><div class="snum">${i<state.stage?'✓':i+1}</div>${s}</div></div>${arr}`;
+  }).join('');
+}
+function goS(i){state.stage=i;render();}
+
+function render(){
+  saveProjects();
+  renderPipe();
+  renderProjectBar();
+  const a=document.getElementById('mainArea');
+  if(state.stage===0)a.innerHTML=renderRFP();
+  else if(state.stage===1)a.innerHTML=renderSup();
+  else if(state.stage===2)a.innerHTML=renderResp();
+  else a.innerHTML=renderAnalysis();
+  const el=document.getElementById('topbarRfpNum');
+  if(el) el.textContent=state.rfpNumber;
+  // Update Gmail button
+  const gb = document.getElementById('gmailBtn');
+  if(gb) {
+    if(isGmailConnected()) {
+      gb.textContent = '✓ Gmail Connected';
+      gb.style.borderColor = '#1a6640';
+      gb.style.color = '#4ade80';
+    } else {
+      gb.textContent = '📧 Connect Gmail';
+      gb.style.borderColor = 'rgba(255,255,255,.35)';
+      gb.style.color = '';
+    }
+  }
+}
+
+function renderProjectBar(){
+  const bar = document.getElementById('projectBar');
+  if(!bar) return;
+  bar.innerHTML = projects.map(p => {
+    const isActive = p.id === activeProjectId;
+    const itemCount = p.items ? p.items.length : 0;
+    const stageLabels = ['Draft','Suppliers','Responses','Analysis'];
+    return `<div onclick="switchProject('${p.id}')"
+      style="display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:5px;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;
+      background:${isActive?'var(--navy)':'var(--card)'};
+      border:1.5px solid ${isActive?'var(--navy)':'var(--border)'};
+      color:${isActive?'#fff':'var(--ink)'};">
+      <div>
+        <div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;">${p.projectName}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;opacity:.6;">${p.rfpNumber} · ${itemCount} item${itemCount!==1?'s':''} · ${stageLabels[p.stage||0]}</div>
+      </div>
+      ${isActive?'':`<button onclick="event.stopPropagation();deleteProject('${p.id}')"
+        style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 2px;margin-left:4px;opacity:.5;"
+        onmouseover="this.style.opacity=1;this.style.color='var(--accent)'"
+        onmouseout="this.style.opacity=.5;this.style.color='var(--muted)'">✕</button>`}
+    </div>`;
+  }).join('') + `<button onclick="newRFP()"
+    style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 14px;border-radius:5px;border:1.5px dashed var(--border);background:transparent;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0;transition:all .15s;"
+    onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">+ New Project</button>`;
+}
+
+// ── STAGE 0: RFP FORM ───────────────────────────────────────
+function renderRFP(){
+  return `
+<div class="rfp-doc">
+
+  <!-- HEADER: RFP title & identity -->
+  <div class="rfp-doc-header">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+      <img src="data:image/png;base64,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" alt="Yo Mama's Foods Co." style="height:56px;background:white;border-radius:6px;padding:6px 12px;"/>
+      <div style="text-align:right;">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;">Request for Quotation</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.35);margin-top:4px;">Fill in the fields below · This document will be sent to suppliers</div>
+      </div>
+    </div>
+    <div style="height:1px;background:rgba(255,255,255,.15);margin:18px 0 0;"></div>
+  </div>
+
+  <!-- META BAND -->
+  <div class="rfp-meta-band">
+    <div class="rfp-meta-cell">
+      <div class="rmc-label">RFP Title</div>
+      <input class="rmc-input" placeholder="e.g. Q1 2026 Ingredients" value="${state.rfpName}" oninput="state.rfpName=this.value"/>
+    </div>
+    <div class="rfp-meta-cell">
+      <div class="rmc-label">RFP Number</div>
+      <input class="rmc-input" value="${state.rfpNumber}" oninput="state.rfpNumber=this.value"/>
+    </div>
+    <div class="rfp-meta-cell">
+      <div class="rmc-label">Issue Date</div>
+      <input class="rmc-input" type="date" value="${state.rfpDate}" oninput="state.rfpDate=this.value"/>
+    </div>
+    <div class="rfp-meta-cell">
+      <div class="rmc-label">Quote Deadline</div>
+      <input class="rmc-input" type="date" value="${state.rfpDeadline}" oninput="state.rfpDeadline=this.value"/>
+    </div>
+    <div class="rfp-meta-cell">
+      <div class="rmc-label">Currency</div>
+      <select class="rmc-input" onchange="state.rfpCurrency=this.value">
+        <option>USD</option><option>MXN</option><option>EUR</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ITEMS TABLE -->
+  <div class="rfp-items-section">
+    <div class="rfp-section-title">Items Requested</div>
+
+    ${state.items.length===0?`
+    <div style="text-align:center;padding:40px 20px;color:var(--muted);border:2px dashed var(--border);border-radius:8px;">
+      <div style="font-size:28px;margin-bottom:8px;">📋</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;">No items yet.</div>
+      <div style="font-size:13px;margin-top:4px;">Click <strong>"+ Add Items"</strong> to select from your ingredient catalog.</div>
+    </div>`:
+    `<!-- HEADER ROW -->
+    <div class="item-row" style="padding-bottom:6px;border-bottom:2px solid var(--navy)!important;">
+      <div></div>
+      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Ingredient / Item</span></div>
+      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Estimated Volume</span></div>
+      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Unit</span></div>
+      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Volume Ranges</span></div>
+      <div><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);">Specs / Packaging / Delivery</span></div>
+      <div></div>
+    </div>
+    ${state.items.map((it,idx)=>{
+      const cat=CATALOG.find(c=>c.id===it.catId);
+      return `<div class="item-row">
+        <div class="ir-num">${String(idx+1).padStart(2,'0')}</div>
+
+        <!-- NAME -->
+        <div class="ir-field">
+          <div style="font-weight:600;font-size:14px;">${cat?cat.name:it.name||'Custom Item'}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${cat?cat.sku:''} ${cat&&cat.note?'· '+cat.note:''}</div>
+          <span class="pi-cat ${cat?CAT_CLS[cat.cat]||'c-other':'c-other'}" style="margin-top:4px;display:inline-block;">${cat?CATS_MAP[cat.cat]||cat.cat:'Custom'}</span>
+        </div>
+
+        <!-- ESTIMATED VOLUME -->
+        <div class="ir-field">
+          <input class="ir-input big" type="number" step="0.01" placeholder="Volume" value="${it.qty||''}" style="width:100%;margin-bottom:5px;" oninput="state.items[${idx}].qty=parseFloat(this.value)||null"/>
+          <select class="ir-input" style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:4px;" onchange="state.items[${idx}].period=this.value">
+            ${['Annual','Monthly','Quarterly','Per Order'].map(p=>`<option ${(it.period||'Annual')===p?'selected':''}>${p}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- UNIT -->
+        <div class="ir-field">
+          <select class="ir-input" style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;" onchange="setUnit(${idx},this.value)">
+            ${(cat?cat.units:['LB','KG','GL','Drum','Tote','Case','Units','RL','each']).map(u=>`<option ${it.unit===u?'selected':''}>${u}</option>`).join('')}
+          </select>
+        </div>
+
+        <!-- VOLUME TIERS -->
+        <div class="ir-field">
+          <div class="tiers-wrap">
+            ${(it.tiers||[]).map((t,ti)=>`
+            <div class="tier-mini">
+              <input value="${t.from}" placeholder="From" oninput="state.items[${idx}].tiers[${ti}].from=this.value"/>
+              <input value="${t.to||''}" placeholder="To (∞)" oninput="state.items[${idx}].tiers[${ti}].to=this.value"/>
+              <div style="display:flex;align-items:center;gap:4px;">
+                <input style="flex:1;" value="${t.label||''}" placeholder="Label (optional)" oninput="state.items[${idx}].tiers[${ti}].label=this.value"/>
+                <button class="add-tier-link" style="color:var(--muted);" onclick="rmTier(${idx},${ti})">✕</button>
+              </div>
+            </div>`).join('')}
+            <button class="add-tier-link" onclick="addTier(${idx})">+ range</button>
+          </div>
+        </div>
+
+        <!-- SPECS + PACKAGING + DELIVERY -->
+        <div class="ir-field" style="display:flex;flex-direction:column;gap:5px;">
+          <input class="ir-input" placeholder="Specs (e.g. Food grade, COA req'd)" value="${it.specs||''}" oninput="state.items[${idx}].specs=this.value"/>
+          <input class="ir-input" placeholder="Packaging req. (e.g. Full bulk pallets, drums 208L)" value="${it.packaging||''}" oninput="state.items[${idx}].packaging=this.value"/>
+          <select class="ir-input" onchange="state.items[${idx}].delivery=this.value;${idx}===0?render():null" style="font-family:'IBM Plex Mono',monospace;font-size:11px;">
+            ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL','Other'].map(loc=>`<option ${(it.delivery||'')==='${loc}'?'selected':''}>${loc}</option>`).join('')}
+          </select>
+          ${it.delivery==='Other'?`<input class="ir-input" placeholder="Specify location…" value="${it.deliveryOther||''}" oninput="state.items[${idx}].deliveryOther=this.value"/>`:''}
+          <!-- PDF ATTACH -->
+          <div>
+            ${it.attachments&&it.attachments.length?
+              it.attachments.map((a,ai)=>`
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--tag);border:1px solid var(--border);border-radius:4px;padding:4px 8px;">
+                  <span style="color:var(--accent);">📎</span>
+                  <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;">${a.name}</span>
+                  <button onclick="removeAttachment(${idx},${ai})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0;">✕</button>
+                </div>`).join(''):''}
+            <label style="display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);cursor:pointer;padding:4px 8px;border:1.5px dashed var(--border);border-radius:4px;transition:all .15s;"
+              onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
+              onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+              📎 Attach PDF
+              <input type="file" accept=".pdf,.doc,.docx,.png,.jpg" style="display:none;" onchange="attachFile(${idx},this)"/>
+            </label>
+          </div>
+        </div>
+
+        <button class="del-row-btn" onclick="removeItem(${idx})">✕</button>
+      </div>`;
+    }).join('')}`}
+
+    <div class="add-item-row">
+      <button class="add-item-btn" onclick="openPicker()">+ Add Items from Catalog</button>
+      <button class="add-item-btn" style="color:var(--ink);border-color:var(--border);" onclick="addBlankItem()">+ Custom Item</button>
+    </div>
+  </div>
+
+  <!-- INSTRUCTIONS for suppliers -->
+  <div class="rfp-instructions">
+    <strong>Instructions to Supplier:</strong> Please provide unit price, available quantities, lead time, payment terms, and any applicable volume discounts. 
+    You may quote in your standard unit of measure — please specify clearly. Quotes are due by the deadline above.
+    <div style="margin-top:8px;">
+      <strong>Deliver to:</strong> <span style="color:var(--ink);">purchasing@yomamas.com</span> &nbsp;·&nbsp; <strong>Contact:</strong> Purchasing Department — Yo Mama's Foods
+    </div>
+  </div>
+
+  <div class="rfp-action-bar">
+    <button class="btn ok" onclick="goS(1)" ${state.items.length===0?'disabled style="opacity:.4;cursor:not-allowed"':''}>
+      Next: Add Suppliers →
+    </button>
+    <button class="btn outline-green" onclick="printRFP()">🖨 Print / PDF</button>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto;">${state.items.length} item${state.items.length!==1?'s':''} · ${state.suppliers.length} supplier${state.suppliers.length!==1?'s':''}</span>
+  </div>
+</div>`;
+}
+
+function setUnit(idx,u){state.items[idx].unit=u;render();}
+function addTier(idx){state.items[idx].tiers.push({from:'',to:'',label:''});render();}
+function rmTier(idx,ti){state.items[idx].tiers.splice(ti,1);render();}
+function removeItem(idx){state.items.splice(idx,1);render();}
+function addBlankItem(){
+  // Clear and open custom item modal
+  document.getElementById('ciName').value='';
+  document.getElementById('ciUnit').value='LB';
+  document.getElementById('ciSpecs').value='';
+  document.getElementById('ciQty').value='';
+  document.getElementById('customOv').classList.add('open');
+}
+function saveCustomItem(){
+  const name=document.getElementById('ciName').value.trim();
+  if(!name) return;
+  const unit=document.getElementById('ciUnit').value;
+  const qty=parseFloat(document.getElementById('ciQty').value)||null;
+  const specs=document.getElementById('ciSpecs').value.trim();
+  state.items.push({catId:'custom_'+uid(),name,qty,unit,tiers:[],specs,_custom:true});
+  closeAll();render();
+}
+function printRFP(){window.print();}
+
+// ── PICKER ──────────────────────────────────────────────────
+function openPicker(){
+  pickerSel=new Set(); // start empty — user picks what to ADD this session
+  pickerCat='all';
+  document.getElementById('pickerSearch').value='';
+  renderPicker();
+  document.getElementById('pickerOv').classList.add('open');
+}
+function renderPicker(){
+  const q=document.getElementById('pickerSearch').value.toLowerCase();
+  const cats=['all',...Object.keys(CATS_MAP)];
+  document.getElementById('pickerCats').innerHTML=cats.map(c=>`<div class="cf ${pickerCat===c?'on':''}" onclick="pickerCat='${c}';renderPicker()">${c==='all'?'All':CATS_MAP[c]}</div>`).join('');
+  const alreadyAdded=new Set(state.items.map(i=>i.catId));
+  const items=CATALOG.filter(c=>{
+    const mc=pickerCat==='all'||c.cat===pickerCat;
+    const mq=!q||c.name.toLowerCase().includes(q)||c.sku.toLowerCase().includes(q)||(c.note||'').toLowerCase().includes(q);
+    return mc&&mq;
+  });
+  document.getElementById('pickerGrid').innerHTML=items.map(c=>{
+    const isAdded=alreadyAdded.has(c.id);
+    const isSel=pickerSel.has(c.id);
+    const cls=isAdded?'picked':isSel?'picked':'';
+    const clickFn=isAdded?'':(`togglePick(\'`+c.id+`\')`);
+    return `<div class="picker-item ${cls}" onclick="${clickFn}" style="${isAdded?'opacity:.55;cursor:default;':''}">
+      <div>
+        <div class="pi-name">${c.name}</div>
+        <div class="pi-sku">${c.sku}</div>
+        <div class="pi-units">${c.units.join(' · ')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+        <span class="pi-cat ${CAT_CLS[c.cat]||'c-other'}">${CATS_MAP[c.cat]||c.cat}</span>
+        ${isAdded?`<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);">already added</span>`:isSel?`<span style="font-size:12px;color:var(--green);">&#10003;</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function togglePick(id){pickerSel.has(id)?pickerSel.delete(id):pickerSel.add(id);renderPicker();}
+function confirmPicker(){
+  const existing=new Set(state.items.map(i=>i.catId));
+  pickerSel.forEach(id=>{
+    if(!existing.has(id)){
+      const cat=CATALOG.find(c=>c.id===id);
+      state.items.push({catId:id,qty:null,unit:cat.def,tiers:[],specs:''});
+    }
+  });
+  // Do NOT remove existing items — only add newly selected ones
+  closeAll();render();
+}
+
+// ── STAGE 1: SUPPLIERS ──────────────────────────────────────
+function renderSup(){
+  const nQuoted=state.suppliers.filter(s=>s.status==='quoted').length;
+  const nPending=state.suppliers.filter(s=>s.status==='pending'||s.status==='sent').length;
+  const nDeclined=state.suppliers.filter(s=>s.status==='declined').length;
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Suppliers</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">
+        Choose who receives this RFP. Update their status as they respond. You'll enter their quotes in the next step.
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn cancel" onclick="openSupPickerModal()">+ Add Supplier</button>
+      <button class="btn ok" onclick="goS(2)" ${state.suppliers.length===0?'disabled style="opacity:.4;cursor:not-allowed"':''}>Next: Record Responses →</button>
+    </div>
+  </div>
+
+  <div class="kcs">
+    <div class="kc"><div class="kc-ring" style="border-color:var(--blue)"></div><span class="kc-lab">Invited</span><span class="kc-val">${state.suppliers.length}</span></div>
+    <div class="kc"><div class="kc-ring" style="border-color:var(--yellow)"></div><span class="kc-lab">Sent / Pending</span><span class="kc-val">${nPending}</span></div>
+    <div class="kc"><div class="kc-ring" style="border-color:var(--green)"></div><span class="kc-lab">Responded</span><span class="kc-val">${nQuoted}</span></div>
+    <div class="kc"><div class="kc-ring" style="border-color:var(--accent)"></div><span class="kc-lab">Declined</span><span class="kc-val">${nDeclined}</span></div>
+  </div>
+
+  <div style="background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:16px;box-shadow:var(--sh);">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:10px;">Items in this RFP (${state.items.length})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${state.items.length===0
+        ? `<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">No items — go back to add items to the RFP first</span>`
+        : state.items.map((it,i)=>{
+            const cat=CATALOG.find(c=>c.id===it.catId);
+            const name=cat?cat.name:(it.name||'Custom Item');
+            return `<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 10px;background:var(--tag);border:1px solid var(--border);border-radius:3px;">${String(i+1).padStart(2,'0')} · ${name}${it.qty?' · '+fN(it.qty)+' '+it.unit+' '+(it.period||'Annual'):''}${it.delivery?' · 📍'+(it.delivery==='Other'?(it.deliveryOther||'Other'):it.delivery):''}</span>`;
+          }).join('')
+      }
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    ${state.suppliers.map(sup=>`
+      <div style="background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:var(--sh);">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;">${sup.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${sup.email||''}</div>
+          ${sup.otherEmails&&sup.otherEmails.length?`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px;">CC: ${sup.otherEmails.join(' · ')}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+          <div class="status-pill ${ST_C[sup.status]}" onclick="openStM('${sup.id}')" title="Click to change status">
+            <span class="sdot"></span>${ST_L[sup.status]}
+          </div>
+          <button onclick="sendRFP('${sup.id}')" title="Send RFP via email"
+            style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 12px;border-radius:4px;border:1.5px solid var(--navy);background:var(--navy);color:white;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;"
+            onmouseover="this.style.background='var(--red)';this.style.borderColor='var(--red)'"
+            onmouseout="this.style.background='var(--navy)';this.style.borderColor='var(--navy)'">
+            📧 Send RFP
+          </button>
+          <button onclick="removeSupplier('${sup.id}')" title="Remove supplier"
+            style="background:none;border:1.5px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 8px;transition:all .15s;"
+            onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>
+        </div>
+      </div>`).join('')}
+
+    <div onclick="openSupPickerModal()"
+      style="border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s;"
+      onmouseover="this.style.borderColor='var(--ink)'" onmouseout="this.style.borderColor='var(--border)'">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);">+ Add supplier from list</span>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;display:flex;gap:10px;">
+    <button class="btn cancel" onclick="goS(0)">← RFP Form</button>
+    <button class="btn ok" onclick="goS(2)" ${state.suppliers.length===0?'disabled style="opacity:.4;cursor:not-allowed"':''}>Next: Record Responses →</button>
+  </div>`;
+}
+
+// ── STAGE 2: RESPONSES ──────────────────────────────────────
+// Layout: items as rows, suppliers as columns — but item-by-item card view
+// so each item shows all supplier responses side by side clearly
+function renderResp(){
+  const act = state.suppliers.filter(s => s.status !== 'declined');
+
+  // helper: get item display name
+  function iName(it){ const cat=CATALOG.find(c=>c.id===it.catId); return cat?cat.name:(it.name||it.catId||'Custom Item'); }
+  function iSku(it){ const cat=CATALOG.find(c=>c.id===it.catId); return cat?cat.sku:''; }
+
+  // compute all best prices per item
+  function getBestPrice(idx){
+    const prices = act.map(s=>{
+      const qd=state.quotes[s.id]?.[idx];
+      if(!qd) return null;
+      const p=qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price;
+      return cvp(p,qd.unit,state.items[idx].unit)||p;
+    }).filter(p=>p!==null);
+    return prices.length ? Math.min(...prices) : null;
+  }
+
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">Responses</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">Click "+ quote" to enter each supplier's response per item</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn cancel" onclick="checkSupplierResponses()">🔄 Check Responses</button>
+      <button class="btn ok" onclick="goS(3)">Analysis →</button>
+    </div>
+  </div>
+  ${kcsH()}
+
+  ${state.items.length===0?`<div style="text-align:center;padding:40px;color:var(--muted);font-family:'IBM Plex Mono',monospace;">No items in this RFP. <button class="btn cancel" onclick="goS(0)">← Go back</button></div>`:''}
+
+  ${state.items.map((it,idx)=>{
+    const bestP = getBestPrice(idx);
+    const quotedCount = act.filter(s=>state.quotes[s.id]?.[idx]).length;
+    return `
+    <div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-bottom:14px;box-shadow:var(--sh);overflow:hidden;">
+
+      <!-- ITEM HEADER -->
+      <div style="background:var(--navy);color:#fff;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;opacity:.5;">#${String(idx+1).padStart(2,'0')}</span>
+          <span style="font-weight:600;font-size:15px;">${iName(it)}</span>
+          ${iSku(it)?`<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;opacity:.5;">${iSku(it)}</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7;">Est. Volume: <b>${it.qty?fN(it.qty):'?'} ${it.unit}</b> <span style="opacity:.6;font-size:9px;">${it.period||'Annual'}</span></span>
+          ${it.delivery?`<span style="font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(255,255,255,.1);padding:2px 7px;border-radius:3px;">📍 ${it.delivery==='Other'?(it.deliveryOther||'Other'):it.delivery}</span>`:''}
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(255,255,255,.12);padding:3px 8px;border-radius:3px;">${quotedCount}/${act.length} quoted</span>
+          ${it.attachments&&it.attachments.length?it.attachments.map((a,ai)=>`
+            <span onclick="openAttachment(${idx},${ai})" title="View ${a.name}"
+              style="font-family:'IBM Plex Mono',monospace;font-size:10px;background:rgba(255,255,255,.15);padding:3px 9px;border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s;"
+              onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">
+              📎 ${a.name.length>20?a.name.slice(0,18)+'…':a.name}
+            </span>`).join(''):''}
+        </div>
+      </div>
+
+      <!-- SUPPLIER RESPONSES GRID -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0;border-top:1px solid var(--border);">
+        ${act.map(s=>{
+          const qd = state.quotes[s.id]?.[idx];
+          const isTiered = qd?.tiers?.length > 0;
+          const baseP = qd ? (isTiered ? parseFloat(qd.tiers[0].price) : qd.price) : null;
+          const norm = (qd && baseP!=null) ? (cvp(baseP, qd.unit, it.unit)||baseP) : null;
+          const isWin = norm !== null && norm === bestP && act.filter(ss=>state.quotes[ss.id]?.[idx]).length > 1;
+          const allTots = act.map(ss=>{const q=state.quotes[ss.id]?.[idx];if(!q)return null;const p=q.tiers?.length?parseFloat(q.tiers[0].price):q.price;return cvp(p,q.unit,it.unit)||p;}).filter(p=>p!==null);
+          const isHi = norm !== null && allTots.length > 1 && norm === Math.max(...allTots);
+
+          return `<div style="border-right:1px solid var(--border);padding:14px 16px;position:relative;transition:background .15s;${isWin?'background:#f0fbf5;':isHi?'background:#fdf5f2;':''}">
+
+            <!-- Supplier name + status -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div>
+                <div style="font-weight:600;font-size:13px;color:var(--navy);">${s.name}</div>
+                <div class="status-pill ${ST_C[s.status]}" style="margin-top:3px;display:inline-flex;cursor:default;"><span class="sdot"></span>${ST_L[s.status]}</div>
+              </div>
+              ${isWin?`<span style="font-family:'IBM Plex Mono',monospace;font-size:8px;background:var(--green);color:white;padding:2px 6px;border-radius:3px;white-space:nowrap;">✓ BEST</span>`:''}
+            </div>
+
+            ${qd ? `
+              <!-- Has quote -->
+              ${isTiered ? `
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--blue);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">Volume Tiers</div>
+                ${qd.tiers.map(t=>`<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;margin-bottom:2px;">${t.from}${t.to?'–'+t.to:'+'}→ ${fmt(t.price)}/${qd.unit}</div>`).join('')}
+              ` : `
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;color:${isWin?'var(--green)':isHi?'var(--accent)':'var(--navy)'};">${fmtPrice(qd.price)}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;">per ${qd.unit||'unit'} &nbsp;·&nbsp; ${qd.currency||'USD'}</div>
+                ${qd.unit!==it.unit&&sameG(qd.unit,it.unit)?`<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--blue);margin-top:3px;">≈ ${fmtPrice(norm)} / ${it.unit}</div>`:''}
+                ${qd.rows&&qd.rows.filter(r=>r.price).length>1?`<div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;padding:3px 6px;background:var(--tag);border-radius:3px;display:inline-block;">${qd.rows.filter(r=>r.price).length} options ↓</div>`:''}
+              `}
+              ${qd.lead?`<div style="font-size:11px;color:var(--muted);margin-top:5px;">🚚 Lead time: ${qd.lead}</div>`:''}
+              ${qd.pay?`<div style="font-size:11px;color:var(--muted);">💳 ${qd.pay}</div>`:''}
+              ${(qd.rows?.[0]?.incoterms||qd.incoterms)?`<div style="font-size:11px;color:var(--muted);">📋 ${qd.rows?.[0]?.incoterms||qd.incoterms}</div>`:''}
+              ${(qd.rows?.[0]?.fob||qd.fob)?`<div style="font-size:11px;color:var(--muted);">📍 FOB: ${qd.rows?.[0]?.fob||qd.fob}</div>`:''}
+              ${qd.moq?`<div style="font-size:11px;color:var(--muted);">📦 MOQ: ${qd.moq}</div>`:''}
+              ${qd.fob?`<div style="font-size:11px;color:var(--muted);">📍 FOB: ${qd.fob}</div>`:''}
+              ${qd.notes||qd.rows?.some(r=>r.comments)?`<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;">${qd.notes||(qd.rows?.find(r=>r.comments)?.comments)||''}</div>`:''}
+              ${(()=>{
+                // Show multiple rows if supplier submitted them
+                if(qd.rows && qd.rows.length > 1){
+                  return `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">All Options</div>
+                    ${qd.rows.filter(r=>r.price).map((r,ri)=>`
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 0;border-bottom:1px solid var(--border);">
+                        <b>${fmt(parseFloat(r.price))}</b>/${r.unit||qd.unit} ${r.currency||'USD'}
+                        ${r.incoterms?'· '+r.incoterms:''}
+                        ${r.moq?'· MOQ: '+r.moq:''}
+                      </div>`).join('')}
+                  </div>`;
+                }
+                return '';
+              })()}
+              ${(()=>{
+                // Show attachments from supplier
+                const atts = qd.attachments || (qd.rows?.flatMap(r=>r.attachments||[])) || [];
+                if(!atts.length) return '';
+                return `<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">📎 Attachments</div>
+                  ${atts.map((a,ai)=>`
+                    <div onclick="openSupplierAttachment('${s.id}',${idx},${ai})"
+                      style="display:flex;align-items:center;gap:6px;padding:5px 8px;background:var(--tag);border:1px solid var(--border);border-radius:4px;cursor:pointer;margin-bottom:4px;transition:background .15s;"
+                      onmouseover="this.style.background='#e8ecf5'" onmouseout="this.style.background='var(--tag)'">
+                      <span style="font-size:14px;">${a.type&&a.type.includes('pdf')?'📄':a.type&&a.type.includes('image')?'🖼️':'📎'}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.name}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">Open</span>
+                    </div>`).join('')}
+                </div>`;
+              })()}
+              <button onclick="openQuoteM('${s.id}',${idx})"
+                style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border:1px solid var(--border);border-radius:4px;background:transparent;cursor:pointer;color:var(--muted);transition:all .15s;"
+                onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">Edit quote</button>
+            ` : `
+              <!-- No quote yet -->
+              <div style="text-align:center;padding:16px 0;">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:10px;">No quote yet</div>
+                <button onclick="openQuoteM('${s.id}',${idx})"
+                  style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:white;border:none;border-radius:5px;cursor:pointer;transition:opacity .15s;"
+                  onmouseover="this.style.opacity=.8" onmouseout="this.style.opacity=1">+ Enter Quote</button>
+              </div>
+            `}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+
+  <div style="margin-top:14px;display:flex;gap:10px;">
+    <button class="btn cancel" onclick="goS(1)">← Suppliers</button>
+    <button class="btn ok" onclick="goS(3)">Analysis →</button>
+  </div>`;
+}
+
+// ── STAGE 3: ANALYSIS ───────────────────────────────────────
+function renderAnalysis(){
+  const act=state.suppliers.filter(s=>s.status!=='declined');
+  const tots=act.map(s=>({s,tot:state.items.reduce((sum,it,i)=>{const qd=state.quotes[s.id]?.[i];if(!qd)return sum;const p=qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price;return sum+p*(qd.qty||it.qty||0);},0),qc:state.items.filter((_,i)=>state.quotes[s.id]?.[i]).length})).sort((a,b)=>a.tot-b.tot);
+  const minT=tots.find(t=>t.tot>0)?.tot||0;
+  const maxT=Math.max(...tots.map(t=>t.tot));
+  return `
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:14px;">Analysis & Ranking</div>
+  ${kcsH()}
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;">Supplier Ranking by Total</div>
+  ${tots.map((t,i)=>{
+    const pct=maxT>0?t.tot/maxT*100:0;
+    const isW=t.tot===minT&&t.tot>0;
+    return `<div class="rank-card ${isW?'win':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">#${i+1}</span>
+          <span style="font-weight:600;font-size:15px;">${t.s.name}</span>
+          ${isW?`<span style="font-family:'IBM Plex Mono',monospace;font-size:8px;background:var(--green);color:white;padding:2px 8px;border-radius:3px;">BEST PRICE</span>`:''}
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;color:${isW?'var(--green)':'var(--ink)'};">${t.tot>0?fmt(t.tot):'No data'}</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${t.qc}/${state.items.length} items quoted</div>
+        </div>
+      </div>
+      <div class="rbar"><div class="rbar-fill ${isW?'wf':''}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('')}
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:20px 0 12px;">Best Price Per Item</div>
+  ${state.items.map((it,idx)=>{
+    const cat=CATALOG.find(c=>c.id===it.catId);
+    const bests=act.map(s=>{const qd=state.quotes[s.id]?.[idx];if(!qd)return null;const p=qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price;return{name:s.name,price:p,unit:qd.unit,isTiered:!!(qd.tiers?.length)};}).filter(Boolean).sort((a,b)=>cvp(a.price,a.unit,it.unit)-cvp(b.price,b.unit,it.unit));
+    return `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--sh);">
+      <div style="flex:1;min-width:140px;">
+        <div style="font-weight:500;">${cat?cat.name:it.catId}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${it.qty?fN(it.qty)+' '+it.unit:''}</div>
+      </div>
+      ${bests.length?`<div style="display:flex;gap:16px;flex-wrap:wrap;">${bests.slice(0,3).map((b,bi)=>`<div style="text-align:center;"><div style="font-family:'IBM Plex Mono',monospace;font-size:${bi===0?'16px':'13px'};font-weight:${bi===0?700:400};color:${bi===0?'var(--green)':'var(--muted)'};">${b.isTiered?'TIERED':fmt(b.price)}<span style="font-size:8px;">/${b.unit}</span></div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${b.name.split(' ')[0]}${bi===0?' ✓':''}</div></div>`).join('')}</div>`:`<span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);">No quotes</span>`}
+    </div>`;
+  }).join('')}
+  ${(maxT-minT)>0?`<div class="kc" style="border-color:var(--green);margin-top:12px;display:inline-flex;"><div class="kc-ring" style="border-color:var(--green)"></div><span class="kc-lab">Potential savings vs highest bidder</span><span class="kc-val" style="color:var(--green);">${fmt(maxT-minT)}</span></div>`:''}
+  <div style="margin-top:18px;display:flex;gap:10px;">
+    <button class="btn cancel" onclick="goS(2)">← Responses</button>
+    <button class="btn ok" onclick="exportTxt()">↓ Export Summary</button>
+  </div>`;
+}
+
+function kcsH(){
+  const q=state.suppliers.filter(s=>state.items.some((_,i)=>state.quotes[s.id]?.[i]));
+  const p=state.suppliers.filter(s=>s.status==='pending'||s.status==='sent');
+  return `<div class="kcs">
+    <div class="kc"><div class="kc-ring" style="border-color:var(--green)"></div><span class="kc-lab">Quoted</span><span class="kc-val">${q.length}</span></div>
+    <div class="kc"><div class="kc-ring"></div><span class="kc-lab">Pending</span><span class="kc-val">${p.length}</span></div>
+    <div class="kc"><div class="kc-ring" style="border-color:var(--accent)"></div><span class="kc-lab">Declined</span><span class="kc-val">${state.suppliers.filter(s=>s.status==='declined').length}</span></div>
+    <div class="kc"><div class="kc-ring" style="border-color:var(--blue)"></div><span class="kc-lab">Items in RFP</span><span class="kc-val">${state.items.length}</span></div>
+  </div>`;
+}
+
+
+// ── SUPPLIER PICKER ─────────────────────────────────────────
+let supPickerSel = new Set();
+
+function openSupPickerModal(){
+  supPickerSel = new Set();
+  document.getElementById('supSearch').value='';
+  renderSupPicker();
+  document.getElementById('supPickerOv').classList.add('open');
+}
+
+function renderSupPicker(){
+  const q = document.getElementById('supSearch').value.toLowerCase();
+  const existingEmails = new Set(state.suppliers.map(s=>s.email.toLowerCase()));
+  const filtered = PRESET_SUPPLIERS_TEMPLATE.filter(s =>
+    !q || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) ||
+    s.otherEmails.some(e=>e.toLowerCase().includes(q))
+  );
+  document.getElementById('supPickerGrid').innerHTML = filtered.map(s => {
+    const isAdded = existingEmails.has(s.email.toLowerCase());
+    const isSel = supPickerSel.has(s.email);
+    const allEmails = [s.email, ...s.otherEmails];
+    return `<div class="picker-item ${isAdded?'picked':isSel?'picked':''}"
+      onclick="${isAdded?'':(`toggleSupPick('${s.email}')`)}"
+      style="${isAdded?'opacity:.5;cursor:default;':''}">
+      <div style="flex:1;min-width:0;">
+        <div class="pi-name">${s.name}</div>
+        <div class="pi-sku">${s.email}</div>
+        ${s.otherEmails.length?`<div class="pi-units">+${s.otherEmails.length} more: ${s.otherEmails.join(', ')}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+        ${isAdded
+          ?`<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);">✓ added</span>`
+          :isSel?`<span style="font-size:13px;color:var(--green);">✓</span>`
+          :`<span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);">${allEmails.length} contact${allEmails.length>1?'s':''}</span>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSupPick(email){
+  supPickerSel.has(email)?supPickerSel.delete(email):supPickerSel.add(email);
+  renderSupPicker();
+}
+
+function confirmSupPicker(){
+  const existingEmails = new Set(state.suppliers.map(s=>s.email.toLowerCase()));
+  supPickerSel.forEach(email => {
+    if(!existingEmails.has(email.toLowerCase())){
+      const tmpl = PRESET_SUPPLIERS_TEMPLATE.find(s=>s.email===email);
+      if(tmpl) state.suppliers.push({
+        id:uid(), name:tmpl.name, contact:'', email:tmpl.email,
+        otherEmails:tmpl.otherEmails, status:'pending'
+      });
+    }
+  });
+  closeAll(); render();
+}
+
+// ── MODALS ──────────────────────────────────────────────────
+function closeAll(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('open'));editCtx=null;}
+
+function openSupModal(){document.getElementById('supOv').classList.add('open');}
+function saveSupplier(){
+  const n=document.getElementById('sName').value.trim();if(!n)return;
+  const emails = document.getElementById('sEmail').value.trim();
+  const emailList = emails.split(',').map(e=>e.trim()).filter(e=>e);
+  const primaryEmail = emailList[0] || '';
+  const otherEmails = emailList.slice(1);
+
+  const newSup = {
+    id:uid(),
+    name:n,
+    contact:document.getElementById('sCont').value.trim(),
+    email:primaryEmail,
+    otherEmails:otherEmails,
+    tel:document.getElementById('sTel').value.trim(),
+    status:'pending'
+  };
+
+  // Add to current RFP suppliers
+  state.suppliers.push(newSup);
+
+  // Also add to master list so it appears in "+ Add Supplier" picker for future RFPs
+  const alreadyInMaster = PRESET_SUPPLIERS_TEMPLATE.some(s=>s.email===primaryEmail);
+  if(!alreadyInMaster && primaryEmail){
+    PRESET_SUPPLIERS_TEMPLATE.push({name:n, email:primaryEmail, otherEmails:otherEmails, _custom:true});
+    saveCustomSuppliers(); // persist custom suppliers to localStorage
+  }
+
+  ['sName','sCont','sEmail','sTel'].forEach(id=>document.getElementById(id).value='');
+  saveProjects();
+  closeAll();render();
+}
+
+// Save/load custom suppliers added manually
+function saveCustomSuppliers(){
+  try{
+    const custom = PRESET_SUPPLIERS_TEMPLATE.filter(s=>s._custom);
+    localStorage.setItem('ym_custom_suppliers', JSON.stringify(custom));
+  }catch(e){}
+}
+
+function loadCustomSuppliers(){
+  try{
+    const saved = localStorage.getItem('ym_custom_suppliers');
+    if(saved){
+      const custom = JSON.parse(saved);
+      custom.forEach(s=>{
+        const exists = PRESET_SUPPLIERS_TEMPLATE.some(p=>p.email===s.email);
+        if(!exists) PRESET_SUPPLIERS_TEMPLATE.push(s);
+      });
+    }
+  }catch(e){}
+}
+
+function removeSupplier(id){
+  state.suppliers=state.suppliers.filter(s=>s.id!==id);
+  delete state.quotes[id];
+  render();
+}
+function openStM(supId){
+  const s=state.suppliers.find(x=>x.id===supId);
+  document.getElementById('stName').textContent=s.name;
+  document.getElementById('stOpts').innerHTML=Object.entries(ST_L).map(([k,v])=>`<button class="status-pill ${ST_C[k]}" style="width:100%;justify-content:center;padding:10px;" onclick="setSt('${supId}','${k}')"><span class="sdot"></span>${v}</button>`).join('');
+  document.getElementById('stOv').classList.add('open');
+}
+function setSt(supId,st){state.suppliers.find(s=>s.id===supId).status=st;closeAll();render();}
+
+function setPT(t){
+  pricingType=t;
+  document.getElementById('ptFlat').classList.toggle('sel',t==='flat');
+  document.getElementById('ptTier').classList.toggle('sel',t==='tier');
+  document.getElementById('flatSec').style.display=t==='flat'?'':'none';
+  document.getElementById('tierSec').style.display=t==='tier'?'':'none';
+}
+function addQTier(){qTiers.push({from:'',to:'',price:'',cur:'USD'});renderQTiers();}
+function removeQTier(i){qTiers.splice(i,1);renderQTiers();}
+function renderQTiers(){
+  document.getElementById('tierRows2').innerHTML=qTiers.map((t,i)=>`
+    <div style="display:grid;grid-template-columns:80px 80px 90px 60px 24px;gap:6px;margin-bottom:4px;align-items:center;">
+      <input style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 7px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);color:var(--ink);outline:none;" value="${t.from}" placeholder="From" oninput="qTiers[${i}].from=this.value"/>
+      <input style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 7px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);color:var(--ink);outline:none;" value="${t.to}" placeholder="To (∞)" oninput="qTiers[${i}].to=this.value"/>
+      <input style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:5px 7px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);color:var(--ink);outline:none;" type="number" value="${t.price}" placeholder="$/unit" oninput="qTiers[${i}].price=this.value"/>
+      <select style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 4px;border:1.5px solid var(--border);border-radius:4px;background:var(--card);color:var(--ink);outline:none;" onchange="qTiers[${i}].cur=this.value"><option>USD</option><option>MXN</option></select>
+      <button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;" onclick="removeQTier(${i})">✕</button>
+    </div>`).join('');
+}
+
+function openQuoteM(supId,itemIdx){
+  editCtx={supId,itemIdx};
+  const sup=state.suppliers.find(s=>s.id===supId);
+  const it=state.items[itemIdx];
+  const cat=CATALOG.find(c=>c.id===it.catId);
+  const ex=state.quotes[supId]?.[itemIdx];
+  document.getElementById('qCtx').innerHTML=`<b>${sup.name}</b> → ${cat?cat.name:it.catId}<br><span style="color:var(--muted);">${it.qty?fN(it.qty)+' '+it.unit+' requested':''} ${it.specs?'· '+it.specs:''}</span>`;
+  document.getElementById('qUnit').value=ex?.unit||it.unit;
+  document.getElementById('qCur').value=ex?.currency||'USD';
+  document.getElementById('qPrice').value=ex?.price||'';
+  document.getElementById('qQty').value=ex?.qty||'';
+  document.getElementById('qLead').value=ex?.lead||'';
+  document.getElementById('qPay').value=ex?.pay||'';
+  document.getElementById('qNotes').value=ex?.notes||'';
+  pricingType=ex?.tiers?.length?'tier':'flat';
+  qTiers=ex?.tiers?.length?ex.tiers.map(t=>({...t})):[];
+  setPT(pricingType);
+  renderQTiers();
+  updHint();
+  document.getElementById('qUnit').onchange=updHint;
+  document.getElementById('quoteOv').classList.add('open');
+}
+function updHint(){
+  if(!editCtx)return;
+  const it=state.items[editCtx.itemIdx];
+  const unit=document.getElementById('qUnit').value;
+  const price=parseFloat(document.getElementById('qPrice').value);
+  const hint=document.getElementById('convHint');
+  if(unit!==it.unit&&sameG(unit,it.unit)&&!isNaN(price)){const c=cvp(price,unit,it.unit);if(c){hint.style.display='';hint.textContent=`≈ ${fmt(c)} per ${it.unit} (auto-converted for comparison)`;return;}}
+  if(unit!==it.unit&&!sameG(unit,it.unit)){hint.style.display='';hint.textContent=`⚠ Unit differs from requested (${it.unit}) — recorded as-is`;return;}
+  hint.style.display='none';
+}
+function saveQuote(){
+  if(!editCtx)return;
+  const{supId,itemIdx}=editCtx;
+  if(!state.quotes[supId])state.quotes[supId]={};
+  const it=state.items[itemIdx];
+  if(pricingType==='tier'){
+    const v=qTiers.filter(t=>t.price);if(!v.length)return;
+    state.quotes[supId][itemIdx]={tiers:v,unit:document.getElementById('qUnit').value,currency:document.getElementById('qCur').value,qty:parseFloat(document.getElementById('qQty').value)||it.qty,lead:document.getElementById('qLead').value.trim(),pay:document.getElementById('qPay').value.trim(),notes:document.getElementById('qNotes').value.trim()};
+  }else{
+    const price=parseFloat(document.getElementById('qPrice').value);if(isNaN(price))return;
+    state.quotes[supId][itemIdx]={price,unit:document.getElementById('qUnit').value,currency:document.getElementById('qCur').value,qty:parseFloat(document.getElementById('qQty').value)||it.qty,lead:document.getElementById('qLead').value.trim(),pay:document.getElementById('qPay').value.trim(),notes:document.getElementById('qNotes').value.trim()};
+  }
+  const sup=state.suppliers.find(s=>s.id===supId);
+  if(sup&&(sup.status==='pending'||sup.status==='sent'||sup.status==='accepted'))sup.status='quoted';
+  closeAll();render();
+}
+
+function exportTxt(){
+  let t=`YO MAMA'S FOODS — RFP SUMMARY\nRFP: ${state.rfpName||state.rfpNumber} | Deadline: ${state.rfpDeadline||'—'}\n${'='.repeat(60)}\n\nITEMS REQUESTED\n`;
+  state.items.forEach((it,idx)=>{
+    const cat=CATALOG.find(c=>c.id===it.catId);
+    t+=`${String(idx+1).padStart(2,'0')}. ${cat?cat.name:it.catId} — ${it.qty?fN(it.qty)+' '+it.unit:'QTY TBD'} ${it.specs?'| '+it.specs:''}\n`;
+    if(it.tiers?.length)it.tiers.forEach(r=>{t+=`    Range: ${r.from}–${r.to||'+'} ${it.unit} ${r.label?'('+r.label+')':''}\n`;});
+  });
+  t+=`\nSUPPLIER QUOTES\n${'─'.repeat(60)}\n`;
+  state.items.forEach((it,idx)=>{
+    const cat=CATALOG.find(c=>c.id===it.catId);
+    t+=`\n${cat?cat.name:it.catId}:\n`;
+    state.suppliers.forEach(s=>{
+      const qd=state.quotes[s.id]?.[idx];
+      if(qd){if(qd.tiers?.length){t+=`  ${s.name}: TIERED — `;qd.tiers.forEach(r=>{t+=`${r.from}–${r.to||'+'}→${fmt(r.price)}/${qd.unit} `;});t+=`| ${qd.lead||''}\n`;}
+      else t+=`  ${s.name}: ${fmt(qd.price)}/${qd.unit} (${qd.currency||'USD'}) | Total: ${fmt(qd.price*(qd.qty||it.qty||0))} | ${qd.lead||''} ${qd.notes||''}\n`;}
+      else t+=`  ${s.name}: no quote\n`;
+    });
+  });
+  const b=new Blob([t],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='rfp-summary.txt';a.click();
+}
+
+window.addEventListener('load',()=>{loadCustomSuppliers();loadProjects();render();});
+document.querySelectorAll('.ov').forEach(o=>{
+  o.addEventListener('click',function(e){
+    // Only close if clicking the dark overlay background itself, not anything inside the modal
+    if(e.target===o) closeAll();
+  });
+});
+// Prevent clicks inside modals from bubbling to overlay
+document.querySelectorAll('.modal').forEach(m=>{
+  m.addEventListener('click',function(e){ e.stopPropagation(); });
+});
+</script>
+</body>
+</html>

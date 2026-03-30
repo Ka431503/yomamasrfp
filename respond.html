@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yo Mama's Foods · Quote Submission</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=Bebas+Neue&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#1a2744;--red:#c8102e;--bg:#f0f2f5;--card:#fff;--border:#d0d7e8;--muted:#6b7a99;--green:#1a6640;--gold:#c9a84c;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--navy);min-height:100vh;}
+.topbar{background:var(--navy);border-bottom:3px solid var(--red);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#fff;}
+.topbar-title em{color:var(--red);font-style:normal;}
+.main{max-width:860px;margin:0 auto;padding:28px 20px 60px;}
+
+/* RFP Info Banner */
+.rfp-info{background:var(--navy);color:#fff;border-radius:10px;padding:24px 28px;margin-bottom:28px;}
+.rfp-info h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:6px;}
+.rfp-info .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.55;margin-bottom:14px;}
+.rfp-info .greeting{font-size:15px;line-height:1.6;opacity:.9;}
+
+/* Item Card */
+.item-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;margin-bottom:28px;overflow:hidden;box-shadow:0 2px 12px rgba(26,39,68,.07);}
+.item-header{background:var(--navy);color:#fff;padding:16px 24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.item-header-left h3{font-size:17px;font-weight:600;margin-bottom:4px;}
+.item-header-left .specs{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.65;margin-top:4px;}
+.item-header-right{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.75;text-align:right;line-height:1.8;flex-shrink:0;}
+.item-header-right b{color:#fff;opacity:1;}
+
+/* Instructions box */
+.instructions{background:#fffbeb;border-left:4px solid var(--gold);padding:14px 18px;margin:20px 24px 8px;border-radius:0 6px 6px 0;font-size:13px;color:#7a5c00;line-height:1.6;}
+
+/* Quote option block */
+.quote-option{background:#f8f9fc;border:1.5px solid var(--border);border-radius:10px;margin:16px 24px;padding:20px 22px;position:relative;}
+.option-num{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.del-option-btn{background:none;border:1px solid #ddd;border-radius:4px;color:#aaa;cursor:pointer;font-size:13px;padding:2px 10px;transition:all .15s;}
+.del-option-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* Field groups */
+.field-row{display:grid;gap:14px;margin-bottom:14px;}
+.field-row.cols-2{grid-template-columns:1fr 1fr;}
+.field-row.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field-row.cols-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.fg{display:flex;flex-direction:column;}
+.fg label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:6px;}
+.fg label span.req{color:var(--red);}
+.fg label span.hint{font-size:8px;color:#aaa;letter-spacing:.5px;margin-left:4px;text-transform:none;}
+.fg input,.fg select,.fg textarea{padding:11px 13px;border:1.5px solid var(--border);border-radius:6px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;outline:none;transition:border .15s;background:#fff;color:var(--navy);}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,39,68,.08);}
+.fg input::placeholder,.fg textarea::placeholder{color:#bbb;font-size:13px;}
+.fg textarea{resize:vertical;min-height:80px;font-size:13px;line-height:1.5;}
+.fg select{cursor:pointer;}
+
+/* Price row special */
+.price-row{display:grid;grid-template-columns:1fr 80px;gap:10px;}
+.price-row input{font-size:18px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+
+/* FOB note */
+.fob-note{background:#e8f0fe;border:1px solid #c5d8f8;border-radius:6px;padding:10px 14px;font-size:12px;color:#1a3a7a;margin-top:6px;line-height:1.5;}
+
+/* Divider */
+.field-divider{border:none;border-top:1px dashed var(--border);margin:16px 0;}
+
+/* Add option button */
+.add-option-wrap{padding:4px 24px 20px;}
+.add-option-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--navy);background:none;border:2px dashed var(--border);border-radius:8px;padding:12px 20px;cursor:pointer;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-option-btn:hover{border-color:var(--navy);background:#f0f4ff;}
+
+/* Attachments */
+.attach-section{padding:16px 24px 20px;border-top:1px solid var(--border);background:#fafbfc;}
+.attach-label{font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--gold);margin-bottom:10px;display:block;}
+.attach-btn{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;transition:all .18s;background:white;display:block;width:100%;}
+.attach-btn:hover{border-color:var(--navy);background:#f0f4ff;}
+.attach-btn .at-icon{font-size:24px;margin-bottom:4px;}
+.attach-btn .at-txt{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+.file-chip{display:inline-flex;align-items:center;gap:8px;background:#e8ecf5;border:1px solid var(--border);border-radius:5px;padding:6px 12px;margin:4px 6px 4px 0;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.file-chip .fname{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-chip button{background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;padding:0;line-height:1;}
+.file-chip button:hover{color:var(--red);}
+.files-list{margin-bottom:10px;}
+
+/* Submit */
+.submit-section{margin-top:8px;}
+.btn-submit{font-family:'IBM Plex Mono',monospace;font-size:15px;padding:16px;background:var(--navy);color:#fff;border:none;border-radius:8px;cursor:pointer;width:100%;transition:background .15s;letter-spacing:.5px;font-weight:500;}
+.btn-submit:hover{background:var(--red);}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;}
+.submit-note{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
+
+/* States */
+.success-screen,.error-screen,.loading{text-align:center;padding:80px 20px;}
+.success-screen .icon{font-size:64px;margin-bottom:16px;}
+.success-screen h2{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;color:var(--green);margin-bottom:10px;}
+.success-screen p,.error-screen p{color:var(--muted);font-size:15px;line-height:1.6;}
+.error-screen h2{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);margin-bottom:10px;}
+.loading{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:14px;}
+
+@media(max-width:640px){
+  .field-row.cols-3,.field-row.cols-4{grid-template-columns:1fr 1fr;}
+  .field-row.cols-2{grid-template-columns:1fr;}
+  .item-header{flex-direction:column;}
+  .item-header-right{text-align:left;}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-title">YO MAMA<em>'S</em> · QUOTE FORM</div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);">Secure Supplier Portal</div>
+</div>
+<div class="main" id="app">
+  <div class="loading">⏳ Loading your quote form...</div>
+</div>
+
+<script>
+const SUPA_URL = 'https://ceasqangdyysnejfpgfz.supabase.co';
+const SUPA_KEY = 'sb_publishable_pKu7K-Y1o-aizvopTZu3dQ_0blkwgQ3';
+
+var params = new URLSearchParams(window.location.search);
+var token = params.get('token');
+var rec = null;
+
+// options[itemIdx] = array of quote option objects
+var options = {};
+var attachedFiles = {};
+
+var INCOTERMS = ['','EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP','Delivered/Landed'];
+var CURRENCIES = ['USD','MXN','EUR','CAD'];
+
+async function supaFetch(path, method, body) {
+  method = method || 'GET';
+  var opts = {
+    method: method,
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': (method==='POST'||method==='PATCH') ? 'return=representation' : ''
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  var res = await fetch(SUPA_URL + path, opts);
+  var text = await res.text();
+  try { return text ? JSON.parse(text) : null; } catch(e) { return null; }
+}
+
+async function init() {
+  if(!token) {
+    showError('This link is missing a token. Please use the full link from the email, or contact purchasing@yomamasfoods.com');
+    return;
+  }
+  document.getElementById('app').innerHTML = '<div class="loading">⏳ Loading your quote form... Please wait.</div>';
+  var result = await supaFetch('/rest/v1/rfp_responses?token=eq.'+token+'&select=*');
+  if(!result) { showError('Unable to connect. Please check your internet and try again, or contact purchasing@yomamasfoods.com'); return; }
+  if(!result.length) { showError('This link is invalid or has expired.<br><br>Please contact purchasing@yomamasfoods.com to request a new link.'); return; }
+  rec = result[0];
+  if(rec.submitted_at) { showSuccess(true); return; }
+  rec.items.forEach(function(it, i) {
+    options[i] = [newOption(it)];
+    attachedFiles[i] = [];
+  });
+  renderForm();
+}
+
+function newOption(it) {
+  return {
+    price_each: '',
+    price_per: '',      // e.g. "250 / TH" or "per case"
+    unit_price: '',     // e.g. $0.2388/each
+    currency: 'USD',
+    unit: it ? (it.unit||'') : '',
+    moq: '',
+    incoterms: '',
+    fob: '',
+    tariff: '',
+    lead_num: '',
+    lead_unit: 'weeks',
+    pay: 'Net 60',
+    comments: ''
+  };
+}
+
+function addOption(idx) {
+  options[idx].push(newOption(rec.items[idx]));
+  renderForm();
+}
+
+function removeOption(idx, oi) {
+  if(options[idx].length <= 1) return;
+  options[idx].splice(oi, 1);
+  renderForm();
+}
+
+function upd(idx, oi, field, val) {
+  if(options[idx] && options[idx][oi]) options[idx][oi][field] = val;
+}
+
+function handleFiles(idx, input) {
+  Array.from(input.files).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      attachedFiles[idx].push({name:file.name, size:file.size, type:file.type, data:e.target.result});
+      renderForm();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeFile(idx, fi) {
+  attachedFiles[idx].splice(fi, 1);
+  renderForm();
+}
+
+function fmtSize(b) {
+  if(b<1024) return b+'B';
+  if(b<1048576) return Math.round(b/1024)+'KB';
+  return (b/1048576).toFixed(1)+'MB';
+}
+
+function showError(msg) {
+  document.getElementById('app').innerHTML = '<div class="error-screen"><h2>⚠ Error</h2><p>'+msg+'</p></div>';
+}
+
+function showSuccess(already) {
+  document.getElementById('app').innerHTML =
+    '<div class="success-screen"><div class="icon">✅</div>' +
+    '<h2>'+(already ? 'Already Submitted' : 'Quote Submitted!')+'</h2>' +
+    '<p>'+(already
+      ? 'Your quote has already been submitted.<br>Contact purchasing@yomamasfoods.com if you need to make changes.'
+      : 'Thank you! Our purchasing team will review your quote shortly and will be in touch.')+'</p></div>';
+}
+
+function getV(id) { var el=document.getElementById(id); return el?el.value:''; }
+
+function renderForm() {
+  var items = rec.items;
+  var html = '';
+
+  // Header banner
+  html += '<div class="rfp-info">';
+  html += '<h2>QUOTE REQUEST</h2>';
+  html += '<div class="sub">Yo Mama\'s Foods Co. &nbsp;·&nbsp; purchasing@yomamasfoods.com</div>';
+  html += '<div class="greeting">Dear <strong>'+rec.supplier_name+'</strong>,<br>';
+  html += 'Please fill in your pricing below for each item. You can add multiple options per item (e.g. different pack sizes or volume breaks). Attach your full proposal at the bottom of each item.</div>';
+  html += '</div>';
+
+  for(var idx=0; idx<items.length; idx++) {
+    var it = items[idx];
+    var name = it.name || it.catId || ('Item '+(idx+1));
+    var opts = options[idx] || [newOption(it)];
+
+    html += '<div class="item-card">';
+
+    // Item header
+    html += '<div class="item-header">';
+    html += '<div class="item-header-left">';
+    html += '<h3>'+String(idx+1).padStart(2,'0')+'. '+name+'</h3>';
+    if(it.specs) html += '<div class="specs">Specs: '+it.specs+'</div>';
+    if(it.packaging) html += '<div class="specs">Packaging: '+it.packaging+'</div>';
+    html += '</div>';
+    html += '<div class="item-header-right">';
+    html += 'Est. Volume: <b>'+(it.qty||'TBD')+' '+(it.unit||'')+'</b> '+(it.period||'Annual')+'<br>';
+    if(it.delivery) html += 'Delivery: <b>'+it.delivery+'</b><br>';
+    html += '</div></div>';
+
+    // Instructions
+    html += '<div class="instructions">';
+    html += '💡 <strong>Please provide:</strong> unit price, pricing basis (each/case/pallet/TH), incoterms, FOB point near Florida or NE US, lead time, MOQ, and payment terms. Add extra rows for different options.';
+    html += '</div>';
+
+    // Quote options
+    for(var oi=0; oi<opts.length; oi++) {
+      var o = opts[oi];
+      html += '<div class="quote-option">';
+      html += '<div class="option-num">OPTION '+(oi+1);
+      if(opts.length > 1) {
+        html += '<button class="del-option-btn" onclick="removeOption('+idx+','+oi+')">Remove</button>';
+      }
+      html += '</div>';
+
+      // Unit Price + Currency + Pricing Basis
+      html += '<div class="field-row cols-3">';
+
+      html += '<div class="fg">';
+      html += '<label>Price <span class="req">*</span></label>';
+      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:18px;font-weight:600;font-family:\'IBM Plex Mono\',monospace;"/>';
+      html += '</div>';
+
+      html += '<div class="fg">';
+      html += '<label>Currency</label>';
+      html += '<select onchange="upd('+idx+','+oi+',\'currency\',this.value)">';
+      CURRENCIES.forEach(function(c){ html += '<option'+(o.currency===c?' selected':'')+'>'+c+'</option>'; });
+      html += '</select></div>';
+
+      html += '<div class="fg">';
+      html += '<label>Pricing Basis <span class="hint">e.g. per each, per case, per TH</span></label>';
+      html += '<input placeholder="e.g. per each / 1,000 units / case of 12" value="'+o.price_per+'" oninput="upd('+idx+','+oi+',\'price_per\',this.value)"/>';
+      html += '</div>';
+
+      html += '</div>'; // end cols-3
+
+      // Unit Price + Unit of Measure + MOQ
+      html += '<div class="field-row cols-3">';
+      html += '<div class="fg">';
+      html += '<label>Unit Price <span class="hint">e.g. $0.2388/each, $255/TH</span></label>';
+      html += '<input placeholder="e.g. $0.2388/each" value="'+(o.unit_price||'')+'" oninput="upd('+idx+','+oi+','unit_price',this.value)"/>';
+      html += '</div>';
+      html += '<div class="fg">';
+      html += '<label>Unit of Measure</label>';
+      html += '<input placeholder="e.g. each, case, pallet, LB, GL" value="'+o.unit+'" oninput="upd('+idx+','+oi+',\'unit\',this.value)"/>';
+      html += '</div>';
+      html += '<div class="fg">';
+      html += '<label>MOQ <span class="hint">minimum order quantity</span></label>';
+      html += '<input placeholder="e.g. 1 pallet / 5,000 units / no minimum" value="'+o.moq+'" oninput="upd('+idx+','+oi+',\'moq\',this.value)"/>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '<hr class="field-divider"/>';
+
+      // Incoterms + FOB
+      html += '<div class="field-row cols-2">';
+      html += '<div class="fg">';
+      html += '<label>Incoterms</label>';
+      html += '<select onchange="upd('+idx+','+oi+',\'incoterms\',this.value)">';
+      INCOTERMS.forEach(function(t){ html += '<option'+(o.incoterms===t?' selected':'')+'>'+t+'</option>'; });
+      html += '</select></div>';
+
+      html += '<div class="fg">';
+      html += '<label>FOB Point <span class="hint">near Florida or NE US preferred</span></label>';
+      html += '<input placeholder="City, State (e.g. West Palm Beach, FL)" value="'+o.fob+'" oninput="upd('+idx+','+oi+',\'fob\',this.value)"/>';
+      html += '<div class="fob-note">📍 <strong>Preferred:</strong> FOB point in Florida or NE United States. Please specify the exact city and state.</div>';
+      html += '</div>';
+      html += '</div>';
+
+      // Tariff
+      html += '<div class="field-row cols-2">';
+      html += '<div class="fg">';
+      html += '<label>Tariff % <span class="hint">if applicable</span></label>';
+      html += '<input type="number" step="0.1" placeholder="e.g. 14" value="'+o.tariff+'" oninput="upd('+idx+','+oi+',\'tariff\',this.value)"/>';
+      html += '</div>';
+      html += '<div class="fg">';
+      html += '<label>Tariff included in price?</label>';
+      html += '<select onchange="upd('+idx+','+oi+',\'tariff_incl\',this.value)">';
+      html += '<option value="">-- Select --</option>';
+      html += '<option value="yes">Yes — already included in price</option>';
+      html += '<option value="no">No — add on top of price</option>';
+      html += '<option value="na">N/A</option>';
+      html += '</select></div>';
+      html += '</div>';
+
+      html += '<hr class="field-divider"/>';
+
+      // Lead time + Payment
+      html += '<div class="field-row cols-3">';
+
+      html += '<div class="fg">';
+      html += '<label>Lead Time</label>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+      html += '<input type="number" placeholder="e.g. 2" value="'+o.lead_num+'" oninput="upd('+idx+','+oi+',\'lead_num\',this.value)" style="text-align:center;font-size:18px;font-weight:600;font-family:\'IBM Plex Mono\',monospace;"/>';
+      html += '<select onchange="upd('+idx+','+oi+',\'lead_unit\',this.value)">';
+      ['days','weeks','months'].forEach(function(u){ html += '<option'+(o.lead_unit===u?' selected':'')+'>'+u+'</option>'; });
+      html += '</select></div></div>';
+
+      html += '<div class="fg">';
+      html += '<label>Payment Terms</label>';
+      html += '<input placeholder="e.g. Net 30, Net 60" value="'+o.pay+'" oninput="upd('+idx+','+oi+',\'pay\',this.value)"/>';
+      html += '</div>';
+
+      html += '<div class="fg">';
+      html += '<label>Stock Available <span class="hint">optional</span></label>';
+      html += '<input placeholder="e.g. 52 pallets in stock" value="'+(o.stock||'')+'" oninput="upd('+idx+','+oi+',\'stock\',this.value)"/>';
+      html += '</div>';
+
+      html += '</div>'; // end cols-3
+
+      // Comments
+      html += '<div class="fg">';
+      html += '<label>Comments / Additional Notes</label>';
+      html += '<textarea placeholder="Any additional information: certifications, availability constraints, freight cost breakdown, volume discounts, etc." oninput="upd('+idx+','+oi+',\'comments\',this.value)">'+o.comments+'</textarea>';
+      html += '</div>';
+
+      html += '</div>'; // end quote-option
+    }
+
+    // Add option button
+    html += '<div class="add-option-wrap">';
+    html += '<button class="add-option-btn" onclick="addOption('+idx+')">';
+    html += '<span style="font-size:16px;">+</span> Add another pricing option';
+    html += '</button></div>';
+
+    // Attachments
+    html += '<div class="attach-section">';
+    html += '<span class="attach-label">📎 Attach Documents for this item</span>';
+    if(attachedFiles[idx] && attachedFiles[idx].length) {
+      html += '<div class="files-list">';
+      attachedFiles[idx].forEach(function(f, fi) {
+        html += '<span class="file-chip">';
+        html += '<span>'+(f.type.includes('pdf')?'📄':f.type.includes('image')?'🖼️':f.type.includes('sheet')||f.type.includes('excel')?'📊':'📎')+'</span>';
+        html += '<span class="fname">'+f.name+'</span>';
+        html += '<span style="color:#aaa;font-size:10px;">('+fmtSize(f.size)+')</span>';
+        html += '<button onclick="removeFile('+idx+','+fi+')">✕</button>';
+        html += '</span>';
+      });
+      html += '</div>';
+    }
+    html += '<label class="attach-btn" onclick="document.getElementById(\'file_'+idx+'\').click()">';
+    html += '<div class="at-icon">📂</div>';
+    html += '<div class="at-txt">Click to attach your proposal, spec sheet, or price list<br><span style="font-size:10px;opacity:.7;">PDF, Excel, Word, Images accepted · Multiple files allowed</span></div>';
+    html += '</label>';
+    html += '<input type="file" id="file_'+idx+'" multiple accept=".pdf,.xlsx,.xls,.doc,.docx,.png,.jpg,.jpeg,.csv" style="display:none;" onchange="handleFiles('+idx+',this)"/>';
+    html += '</div>';
+
+    html += '</div>'; // end item-card
+  }
+
+  // Submit
+  html += '<div class="submit-section">';
+  html += '<button class="btn-submit" onclick="submitQuotes()" id="submitBtn">Submit Quote →</button>';
+  html += '<div class="submit-note">';
+  html += 'Fields marked <span style="color:var(--red);">*</span> are required.<br>';
+  html += 'Your quote will be sent directly to Yo Mama\'s Foods purchasing team.<br>';
+  html += 'Questions? Contact us at purchasing@yomamasfoods.com';
+  html += '</div></div>';
+
+  document.getElementById('app').innerHTML = html;
+}
+
+async function submitQuotes() {
+  var finalQuotes = {};
+  var hasAny = false;
+
+  for(var idx=0; idx<rec.items.length; idx++) {
+    var opts = options[idx] || [];
+    var validOpts = opts.filter(function(o){ return o.price_each && parseFloat(o.price_each) > 0; });
+    if(validOpts.length) hasAny = true;
+
+    // Build rows for display
+    var rows = opts.map(function(o){
+      return {
+        price: parseFloat(o.price_each)||null,
+        price_per: o.price_per,
+        currency: o.currency||'USD',
+        unit: o.unit||rec.items[idx].unit,
+        moq: o.moq,
+        incoterms: o.incoterms,
+        fob: o.fob,
+        tariff: o.tariff ? parseFloat(o.tariff) : null,
+        tariff_incl: o.tariff_incl,
+        lead: o.lead_num ? (o.lead_num + ' ' + o.lead_unit) : '',
+        pay: o.pay,
+        stock: o.stock,
+        comments: o.comments
+      };
+    });
+
+    finalQuotes[idx] = {
+      rows: rows,
+      price: validOpts.length ? parseFloat(validOpts[0].price_each) : null,
+      currency: validOpts.length ? validOpts[0].currency : 'USD',
+      unit: validOpts.length ? (validOpts[0].unit||rec.items[idx].unit) : rec.items[idx].unit,
+      lead: validOpts.length && validOpts[0].lead_num ? (validOpts[0].lead_num+' '+validOpts[0].lead_unit) : '',
+      pay: validOpts.length ? validOpts[0].pay : '',
+      tiers: [],
+      attachments: attachedFiles[idx] || []
+    };
+  }
+
+  if(!hasAny) {
+    alert('Please fill in at least one unit price before submitting.');
+    return;
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.textContent = 'Submitting...';
+  btn.disabled = true;
+
+  var result = await supaFetch(
+    '/rest/v1/rfp_responses?token=eq.'+token,
+    'PATCH',
+    { quotes: finalQuotes, submitted_at: new Date().toISOString() }
+  );
+
+  if(result !== null) {
+    showSuccess(false);
+  } else {
+    btn.textContent = 'Submit Quote →';
+    btn.disabled = false;
+    alert('Error submitting. Please try again or email purchasing@yomamasfoods.com');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
