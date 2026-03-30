@@ -891,6 +891,31 @@ async function openInGmail(){
   }
 }
 
+async function generateSupplierToken(supId){
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const sup = state.suppliers.find(s=>s.id===supId);
+  if(!sup) return null;
+  // Strip attachments to avoid payload size issues
+  const itemsClean = state.items.map(function(it){
+    const c = Object.assign({}, it);
+    delete c.attachments;
+    return c;
+  });
+  const result = await supaFetch('/rest/v1/rfp_responses', 'POST', {
+    id: uid(),
+    rfp_id: state.id,
+    supplier_id: supId,
+    supplier_name: sup.name,
+    supplier_email: sup.email,
+    token: token,
+    items: itemsClean,
+    quotes: {},
+    submitted_at: null
+  });
+  if(!result){ console.error('Failed to save token'); return null; }
+  return token;
+}
+
 async function sendRFP(supId){
   const sup = state.suppliers.find(s=>s.id===supId);
   if(!sup) return;
