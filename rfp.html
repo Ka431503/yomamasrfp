@@ -718,6 +718,12 @@ function loadProjects(){
   saveProjects();
 }
 
+async function saveProjectToCloud(){
+  if(!state.id) return;
+  await supaFetch('/rest/v1/rfp_projects?id=eq.'+state.id,'DELETE');
+  await supaFetch('/rest/v1/rfp_projects','POST',{id:state.id,data:state,updated_at:new Date().toISOString()});
+}
+
 function saveProjects(){
   const idx=projects.findIndex(p=>p.id===activeProjectId);
   if(idx>=0) projects[idx]=state;
