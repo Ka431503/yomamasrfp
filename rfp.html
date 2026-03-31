@@ -369,6 +369,7 @@ select.rmc-input{cursor:pointer;}
     <button class="tbtn" onclick="newRFP()">+ New RFP</button>
     <button class="tbtn" onclick="openSupPickerModal()">+ Supplier</button>
     <button id="gmailBtn" class="tbtn" onclick="isGmailConnected()?null:connectGmail()">📧 Connect Gmail</button>
+    <button class="tbtn" onclick="showArchive()" style="border-color:var(--gold);color:var(--gold);">📦 Archive</button>
     <button class="tbtn ac" onclick="exportTxt()">↓ Export</button>
   </div>
 </div>
@@ -391,6 +392,23 @@ select.rmc-input{cursor:pointer;}
 </div>
 </div>
 
+<!-- ARCHIVE MODAL -->
+<div class="ov" id="archiveOv">
+<div class="modal" style="width:780px;max-height:88vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">📦 RFP Archive</h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Completed & Closed Requests for Quotation</div>
+  <div id="archiveContent" style="max-height:60vh;overflow-y:auto;">
+    <div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>
+  </div>
+  <div style="margin-top:16px;text-align:right;">
+    <button class="btn cancel" onclick="closeAll()">Close</button>
+  </div>
+</div>
+</div>
+
 <!-- EMAIL PREVIEW MODAL -->
 
 
@@ -403,6 +421,23 @@ select.rmc-input{cursor:pointer;}
   <div class="ma">
     <button class="btn cancel" onclick="closeAll()">Cancel</button>
     <button class="btn ok" onclick="confirmNewProject()">Create Project</button>
+  </div>
+</div>
+</div>
+
+<!-- ARCHIVE MODAL -->
+<div class="ov" id="archiveOv">
+<div class="modal" style="width:780px;max-height:88vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">📦 RFP Archive</h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Completed & Closed Requests for Quotation</div>
+  <div id="archiveContent" style="max-height:60vh;overflow-y:auto;">
+    <div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>
+  </div>
+  <div style="margin-top:16px;text-align:right;">
+    <button class="btn cancel" onclick="closeAll()">Close</button>
   </div>
 </div>
 </div>
@@ -1083,6 +1118,36 @@ purchasing@yomamasfoods.com | www.yomamasfoods.com`;
   document.getElementById('emailPreviewSubject').textContent = subject;
   document.getElementById('emailPreviewBody').textContent = body;
   document.getElementById('emailPreviewOv').classList.add('open');
+}
+
+async function showArchive(){
+  document.getElementById('archiveOv').classList.add('open');
+  const el = document.getElementById('archiveContent');
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;">Loading...</div>';
+
+  const data = await supaFetch('/rest/v1/rfp_archive?select=*&order=closed_at.desc');
+
+  if(!data || !data.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">' +
+      '<div style="font-size:36px;margin-bottom:12px;">📭</div>' +
+      '<div style="font-size:14px;">No archived RFPs yet.</div>' +
+      '<div style="font-size:12px;margin-top:6px;">Close your first RFP from the Analysis screen.</div>' +
+      '</div>';
+    return;
+  }
+
+  el.innerHTML = data.map(r => {
+    const date = r.closed_at ? new Date(r.closed_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">' +
+      '<div style="font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;background:#e8ecf5;padding:4px 10px;border-radius:4px;flex-shrink:0;">' + (r.rfp_number||'RFP') + '</div>' +
+      '<div style="flex:1;">' +
+        '<div style="font-weight:600;font-size:14px;margin-bottom:3px;">' + (r.rfp_name||r.rfp_number||'RFP') + '</div>' +
+        '<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);">' + (r.items_count||0) + ' items · ' + (r.suppliers_count||0) + ' suppliers</div>' +
+      '</div>' +
+      (r.awarded_to ? '<div style="display:flex;align-items:center;gap:6px;background:#f0fbf5;border:1px solid #b3dfc7;border-radius:5px;padding:5px 12px;font-size:13px;color:var(--green);font-weight:600;flex-shrink:0;">🏆 ' + r.awarded_to + '</div>' : '') +
+      '<div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;">' + date + '</div>' +
+      '</div>';
+  }).join('');
 }
 
 function copyEmailBody(){
