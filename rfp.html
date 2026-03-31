@@ -426,21 +426,7 @@ select.rmc-input{cursor:pointer;}
 </div>
 
 <!-- ARCHIVE MODAL -->
-<div class="ov" id="archiveOv">
-<div class="modal" style="width:780px;max-height:88vh;">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">📦 RFP Archive</h2>
-    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
-  </div>
-  <div style="font-family:monospace;font-size:10px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Completed & Closed Requests for Quotation</div>
-  <div id="archiveContent" style="max-height:60vh;overflow-y:auto;">
-    <div style="text-align:center;padding:40px;color:var(--muted);">Loading...</div>
-  </div>
-  <div style="margin-top:16px;text-align:right;">
-    <button class="btn cancel" onclick="closeAll()">Close</button>
-  </div>
-</div>
-</div>
+
 
 <!-- EMAIL PREVIEW MODAL -->
 <div class="ov" id="emailPreviewOv">
@@ -487,17 +473,7 @@ select.rmc-input{cursor:pointer;}
 </div>
 
 <!-- NEW PROJECT MODAL -->
-<div class="ov" id="newProjOv">
-<div class="modal" style="width:400px;">
-  <h2>New <em>Project</em></h2>
-  <p style="font-family:monospace;font-size:10px;color:var(--muted);margin-bottom:16px;">Each project is a separate RFP with its own items, suppliers and quotes</p>
-  <div class="fg"><label>Project Name</label><input id="newProjName" placeholder="e.g. Q2 Packaging, Sauce Line Ingredientsâ¦" onkeydown="if(event.key==='Enter')confirmNewProject()"/></div>
-  <div class="ma">
-    <button class="btn cancel" onclick="closeAll()">Cancel</button>
-    <button class="btn ok" onclick="confirmNewProject()">Create Project</button>
-  </div>
-</div>
-</div>
+
 
 <!-- SUPPLIER PICKER MODAL -->
 <div class="ov" id="supPickerOv">
