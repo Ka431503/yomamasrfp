@@ -1901,6 +1901,31 @@ async function closeAndArchiveRFP(){
   window.location.href = './index.html';
 }
 
+async function checkSupplierResponses(){
+  if(!state.id){ alert('Save your project first.'); return; }
+  const rows = await supaFetch('/rest/v1/rfp_responses?rfp_id=eq.'+state.id+'&submitted_at=not.is.null&select=*');
+  if(!rows || !rows.length){ alert('No new responses yet.'); return; }
+  let updated = 0;
+  rows.forEach(row => {
+    if(row.quotes && Object.keys(row.quotes).length > 0){
+      const sup = state.suppliers.find(s => s.id === row.supplier_id);
+      if(sup) sup.status = 'quoted';
+      Object.keys(row.quotes).forEach(k => {
+        if(!state.quotes[row.supplier_id]) state.quotes[row.supplier_id] = {};
+        state.quotes[row.supplier_id][k] = row.quotes[k];
+      });
+      updated++;
+    }
+  });
+  if(updated > 0){
+    saveProjects();
+    render();
+    alert(updated + ' response(s) loaded successfully!');
+  } else {
+    alert('No new responses found.');
+  }
+}
+
 async function sendAwardEmail(){
   const sel = document.getElementById('awardWinnerSel');
   if(!sel || !sel.value){ alert('Please select a winner first.'); return; }
