@@ -127,6 +127,32 @@ var attachedFiles = {};
 var INCOTERMS = ['','EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU','DDP','Delivered/Landed'];
 var CURRENCIES = ['USD','MXN','EUR','CAD'];
 
+async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
+  // Upload file to Supabase Storage
+  const fileName = token + '_item' + itemIdx + '_' + fileIdx + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const res = await fetch(SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': file.type || 'application/octet-stream',
+      'x-upsert': 'true'
+    },
+    body: file
+  });
+  if(res.ok) {
+    return {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      path: fileName,
+      url: SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName
+    };
+  }
+  console.error('Upload failed:', res.status, await res.text());
+  return null;
+}
+
 async function supaFetch(path, method, body) {
   method = method || 'GET';
   var opts = {
@@ -473,6 +499,38 @@ async function submitQuotes() {
   var btn = document.getElementById('submitBtn');
   btn.textContent = 'Submitting...';
   btn.disabled = true;
+
+  // Upload attachments to Supabase Storage
+  var btn2 = document.getElementById('submitBtn');
+  if(btn2) { btn2.textContent = 'Uploading files...'; }
+
+  for(var k in finalQuotes) {
+    var idx = parseInt(k);
+    var files = attachedFiles[idx] || [];
+    if(files.length > 0) {
+      var uploadedFiles = [];
+      for(var fi = 0; fi < files.length; fi++) {
+        var fileObj = files[fi];
+        // Convert base64 back to blob for upload
+        try {
+          var response = await fetch(fileObj.data);
+          var blob = await response.blob();
+          var file = new File([blob], fileObj.name, {type: fileObj.type});
+          var uploaded = await uploadFileToStorage(file, token, idx, fi);
+          if(uploaded) uploadedFiles.push(uploaded);
+        } catch(e) {
+          console.error('File upload error:', e);
+        }
+      }
+      finalQuotes[k].attachments = uploadedFiles;
+    }
+    // Clean base64 data from rows
+    if(finalQuotes[k].rows) {
+      finalQuotes[k].rows.forEach(function(r){ delete r.attachments; });
+    }
+  }
+
+  if(btn2) { btn2.textContent = 'Saving quote...'; }
 
   var result = await supaFetch(
     '/rest/v1/rfp_responses?token=eq.'+token,
