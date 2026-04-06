@@ -975,9 +975,11 @@ async function uploadRFPAttachment(attachment, rfpNum, itemName){
       const signData = await signRes.json();
       console.log('Sign response:', signData);
       if(signData && signData.signedURL){
+        // signedURL already contains /storage/v1/object/sign/...
+        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
         return {
           name: attachment.name,
-          url: SUPA_URL + signData.signedURL
+          url: fullUrl
         };
       }
     } else {
@@ -1014,6 +1016,8 @@ async function generateSupplierToken(supId){
     const result = await supaFetch('/rest/v1/rfp_responses', 'POST', {
       id: uid(),
       rfp_id: state.id,
+      rfp_number: state.rfpNumber || '',
+      rfp_name: state.rfpName || state.rfpNumber || '',
       supplier_id: supId,
       supplier_name: sup.name,
       supplier_email: sup.email,
@@ -1074,7 +1078,7 @@ async function sendRFP(supId){
           }
         }
       }
-      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ' → ' + u.url).join('\n');
+      if(uploaded.length) attachLinks = '\n      Spec Sheet(s) attached — open the quote form link above to view and download:\n' + uploaded.map(u=>'      📎 ' + u.name).join('\n');
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}

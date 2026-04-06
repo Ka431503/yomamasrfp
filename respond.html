@@ -275,6 +275,11 @@ function renderForm() {
   // Header banner
   html += '<div class="rfp-info">';
   html += '<h2>QUOTE REQUEST</h2>';
+  if(rec.rfp_number || rec.rfp_name){
+    html += '<div style="font-family:monospace;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:6px;">';
+    html += (rec.rfp_number||'') + (rec.rfp_name && rec.rfp_name !== rec.rfp_number ? ' &nbsp;—&nbsp; ' + rec.rfp_name : '');
+    html += '</div>';
+  }
   html += '<div class="sub">Yo Mama\'s Foods Co. &nbsp;·&nbsp; purchasing@yomamasfoods.com</div>';
   html += '<div class="greeting">Dear <strong>'+rec.supplier_name+'</strong>,<br>';
   html += 'Please fill in your pricing below for each item. You can add multiple options per item (e.g. different pack sizes or volume breaks). Attach your full proposal at the bottom of each item.</div>';
