@@ -128,7 +128,6 @@ var INCOTERMS = ['','EXW','FCA','FAS','FOB','CFR','CIF','CPT','CIP','DAP','DPU',
 var CURRENCIES = ['USD','MXN','EUR','CAD'];
 
 async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
-  // Upload file to Supabase Storage
   const fileName = token + '_item' + itemIdx + '_' + fileIdx + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const res = await fetch(SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName, {
     method: 'POST',
@@ -141,12 +140,23 @@ async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
     body: file
   });
   if(res.ok) {
+    // Get signed URL valid for 1 year
+    const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + fileName, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({expiresIn: 31536000})
+    });
+    const signData = await signRes.json();
     return {
       name: file.name,
       type: file.type,
       size: file.size,
       path: fileName,
-      url: SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName
+      url: signData.signedURL ? (SUPA_URL + signData.signedURL) : null
     };
   }
   console.error('Upload failed:', res.status, await res.text());
@@ -314,33 +324,28 @@ function renderForm() {
       }
       html += '</div>';
 
-      // Unit Price + Currency + Pricing Basis
+      // UNIT PRICE - Required, highlighted first
+      html += '<div style="background:#fff8e1;border:2px solid #f0c040;border-radius:8px;padding:14px 16px;margin-bottom:14px;">';
+      html += '<div style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#a07800;margin-bottom:10px;">★ Required Field</div>';
       html += '<div class="field-row cols-3">';
-
       html += '<div class="fg">';
-      html += '<label>Price <span class="req">*</span></label>';
-      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:18px;font-weight:600;font-family:\'IBM Plex Mono\',monospace;"/>';
+      html += '<label>Unit Price <span class="req">*</span></label>';
+      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:20px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;border-color:#f0c040;background:#fff;"/>';
       html += '</div>';
-
       html += '<div class="fg">';
       html += '<label>Currency</label>';
-      html += '<select onchange="upd('+idx+','+oi+',\'currency\',this.value)">';
+      html += '<select onchange="upd('+idx+','+oi+',\'currency\',this.value)" style="background:#fff;">';
       CURRENCIES.forEach(function(c){ html += '<option'+(o.currency===c?' selected':'')+'>'+c+'</option>'; });
       html += '</select></div>';
-
       html += '<div class="fg">';
-      html += '<label>Pricing Basis <span class="hint">e.g. per each, per case, per TH</span></label>';
-      html += '<input placeholder="e.g. per each / 1,000 units / case of 12" value="'+o.price_per+'" oninput="upd('+idx+','+oi+',\'price_per\',this.value)"/>';
+      html += '<label>Pricing Basis <span class="hint">e.g. per each, per TH, per case</span></label>';
+      html += '<input placeholder="e.g. per each / per 1,000 / per case of 12" value="'+o.price_per+'" style="background:#fff;" oninput="upd('+idx+','+oi+',\'price_per\',this.value)"/>';
+      html += '</div>';
+      html += '</div>';
       html += '</div>';
 
-      html += '</div>'; // end cols-3
-
-      // Unit Price + Unit of Measure + MOQ
+      // Unit of Measure + MOQ
       html += '<div class="field-row cols-3">';
-      html += '<div class="fg">';
-      html += '<label>Unit Price <span class="hint">e.g. $0.2388/each, $255/TH</span></label>';
-      html += '<input placeholder="e.g. $0.2388/each" value="'+(o.unit_price||'')+'" oninput="upd('+idx+','+oi+',\'unit_price\',this.value)"/>';
-      html += '</div>';
       html += '<div class="fg">';
       html += '<label>Unit of Measure</label>';
       html += '<input placeholder="e.g. each, case, pallet, LB, GL" value="'+o.unit+'" oninput="upd('+idx+','+oi+',\'unit\',this.value)"/>';
@@ -349,6 +354,7 @@ function renderForm() {
       html += '<label>MOQ <span class="hint">minimum order quantity</span></label>';
       html += '<input placeholder="e.g. 1 pallet / 5,000 units / no minimum" value="'+o.moq+'" oninput="upd('+idx+','+oi+',\'moq\',this.value)"/>';
       html += '</div>';
+      html += '<div class="fg"></div>';
       html += '</div>';
 
       html += '<hr class="field-divider"/>';

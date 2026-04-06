@@ -945,31 +945,44 @@ async function openInGmail(){
 }
 
 async function uploadRFPAttachment(attachment, rfpNum, itemName){
-  // Upload spec sheet to Supabase Storage
   try {
-    const fileName = rfpNum + '_' + itemName.replace(/[^a-zA-Z0-9]/g,'_').substring(0,30) + '_' + attachment.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    const fileName = rfpNum.replace(/[^a-zA-Z0-9-]/g,'_') + '_' + itemName.replace(/[^a-zA-Z0-9]/g,'_').substring(0,20) + '_' + Date.now() + '_' + attachment.name.replace(/[^a-zA-Z0-9._-]/g,'_');
     // Convert base64 to blob
-    const res = await fetch(attachment.data);
-    const blob = await res.blob();
+    const fetchRes = await fetch(attachment.data);
+    const blob = await fetchRes.blob();
+    // Upload file
     const uploadRes = await fetch(SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName, {
       method: 'POST',
       headers: {
         'apikey': SUPA_KEY,
         'Authorization': 'Bearer ' + SUPA_KEY,
-        'Content-Type': attachment.type || 'application/pdf',
+        'Content-Type': attachment.type || 'application/octet-stream',
         'x-upsert': 'true'
       },
       body: blob
     });
     if(uploadRes.ok){
-      // Get signed URL valid for 30 days
-      const signRes = await supaFetch('/storage/v1/object/sign/rfp-attachments/' + fileName, 'POST', {expiresIn: 2592000});
-      if(signRes && signRes.signedURL){
+      // Get signed URL valid for 30 days (2592000 seconds)
+      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + fileName, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({expiresIn: 2592000})
+      });
+      const signData = await signRes.json();
+      console.log('Sign response:', signData);
+      if(signData && signData.signedURL){
         return {
           name: attachment.name,
-          url: SUPA_URL + signRes.signedURL
+          url: SUPA_URL + signData.signedURL
         };
       }
+    } else {
+      const errText = await uploadRes.text();
+      console.error('Upload failed:', uploadRes.status, errText);
     }
   } catch(e) {
     console.error('Upload error:', e);
@@ -1061,7 +1074,7 @@ async function sendRFP(supId){
           }
         }
       }
-      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ': ' + u.url).join('\n');
+      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ' → ' + u.url).join('\n');
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
@@ -1283,15 +1296,34 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
   const atts = qd.attachments || (qd.rows?.flatMap(r=>r.attachments||[])) || [];
   const a = atts[attachIdx];
   if(!a) { alert('File not available.'); return; }
+
+  // If file has a storage path, get signed URL
   if(a.path) {
     try {
-      const res = await supaFetch('/storage/v1/object/sign/rfp-attachments/' + a.path, 'POST', {expiresIn: 3600});
-      if(res && res.signedURL) {
-        window.open('https://ceasqangdyysnejfpgfz.supabase.co' + res.signedURL, '_blank');
+      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + a.path, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({expiresIn: 3600})
+      });
+      const signData = await signRes.json();
+      if(signData && signData.signedURL) {
+        window.open(SUPA_URL + signData.signedURL, '_blank');
         return;
       }
     } catch(e) { console.error('Signed URL error:', e); }
   }
+
+  // If file has a direct URL
+  if(a.url) {
+    window.open(a.url, '_blank');
+    return;
+  }
+
+  // Fallback: use base64 data
   if(a.data) {
     const win = window.open();
     if(a.type && a.type.includes('pdf')){
@@ -1300,7 +1332,7 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
       win.document.write('<img src="'+a.data+'" style="max-width:100%;display:block;margin:auto;"/>');
     }
   } else {
-    alert('File not available.');
+    alert('File not available. The supplier may not have attached documents.');
   }
 }
 
@@ -2029,6 +2061,22 @@ async function closeAndArchiveRFP(){
   state.awardedTo = winner ? winner.name : null;
   state.awardedEmail = winner ? winner.email : null;
 
+  // Build quote summary per supplier per item
+  const quoteSummary = {};
+  state.suppliers.forEach(s => {
+    if(state.quotes[s.id]){
+      quoteSummary[s.id] = {};
+      state.items.forEach((it,i) => {
+        const qd = state.quotes[s.id]?.[i];
+        if(qd){
+          const p = qd.rows?.[0]?.price || qd.price;
+          const u = qd.rows?.[0]?.unit || qd.unit;
+          quoteSummary[s.id][i] = {price: p, unit: u, currency: qd.currency||'USD'};
+        }
+      });
+    }
+  });
+
   // Save to Supabase archive table
   await supaFetch('/rest/v1/rfp_archive', 'POST', {
     id: state.id,
@@ -2041,8 +2089,8 @@ async function closeAndArchiveRFP(){
     closed_at: state.closedAt,
     summary: JSON.stringify({
       items: state.items.map(it=>({name:it.name||it.catId, qty:it.qty, unit:it.unit})),
-      suppliers: state.suppliers.map(s=>({name:s.name, status:s.status})),
-      quotes: state.quotes
+      suppliers: state.suppliers.map(s=>({name:s.name, status:s.status, id:s.id})),
+      quotes: quoteSummary
     })
   }).catch(e=>console.log('Archive save:', e));
 
