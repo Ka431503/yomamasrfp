@@ -288,8 +288,7 @@ function renderForm() {
       html += '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
       it.attachments.forEach(function(a){
         if(a.url){
-          html += '<a href="'+a.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:10px;color:#fff;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">' +
-            '📎 '+a.name+'</a>';
+          html += '<a href="'+a.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:10px;color:#fff;text-decoration:none;">📎 '+a.name+'</a>';
         }
       });
       html += '</div>';
