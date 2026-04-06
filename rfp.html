@@ -1907,44 +1907,81 @@ function renderResp(){
 // ── STAGE 3: ANALYSIS ───────────────────────────────────────
 function renderAnalysis(){
   const act=state.suppliers.filter(s=>s.status!=='declined');
-  const tots=act.map(s=>({s,tot:state.items.reduce((sum,it,i)=>{const qd=state.quotes[s.id]?.[i];if(!qd)return sum;const p=qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price;return sum+p*(qd.qty||it.qty||0);},0),qc:state.items.filter((_,i)=>state.quotes[s.id]?.[i]).length})).sort((a,b)=>a.tot-b.tot);
-  const minT=tots.find(t=>t.tot>0)?.tot||0;
-  const maxT=Math.max(...tots.map(t=>t.tot));
+
+  // Find best unit price per item across suppliers
+  const bestPricePerItem = {};
+  state.items.forEach((it,idx)=>{
+    let best = null;
+    act.forEach(s=>{
+      const qd=state.quotes[s.id]?.[idx];
+      if(!qd) return;
+      const p = qd.rows?.[0]?.price || (qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price);
+      if(p && (!best || p < best)) best = p;
+    });
+    bestPricePerItem[idx] = best;
+  });
+
   return `
-  <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:14px;">Analysis & Ranking</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:14px;">Analysis & Comparison</div>
   ${kcsH()}
-  <div style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:12px;">Supplier Ranking by Total</div>
-  ${tots.map((t,i)=>{
-    const pct=maxT>0?t.tot/maxT*100:0;
-    const isW=t.tot===minT&&t.tot>0;
-    return `<div class="rank-card ${isW?'win':''}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="font-family:monospace;font-size:11px;color:var(--muted);">#${i+1}</span>
-          <span style="font-weight:600;font-size:15px;">${t.s.name}</span>
-          ${isW?`<span style="font-family:monospace;font-size:8px;background:var(--green);color:white;padding:2px 8px;border-radius:3px;">BEST PRICE</span>`:''}
-        </div>
-        <div style="text-align:right;">
-          <div style="font-family:monospace;font-size:20px;font-weight:700;color:${isW?'var(--green)':'var(--ink)'};">${t.tot>0?fmt(t.tot):'No data'}</div>
-          <div style="font-family:monospace;font-size:9px;color:var(--muted);">${t.qc}/${state.items.length} items quoted</div>
-        </div>
-      </div>
-      <div class="rbar"><div class="rbar-fill ${isW?'wf':''}" style="width:${pct}%"></div></div>
-    </div>`;
-  }).join('')}
-  <div style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:20px 0 12px;">Best Price Per Item</div>
+
+  <!-- Per-Item comparison table -->
   ${state.items.map((it,idx)=>{
     const cat=CATALOG.find(c=>c.id===it.catId);
-    const bests=act.map(s=>{const qd=state.quotes[s.id]?.[idx];if(!qd)return null;const p=qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price;return{name:s.name,price:p,unit:qd.unit,isTiered:!!(qd.tiers?.length)};}).filter(Boolean).sort((a,b)=>cvp(a.price,a.unit,it.unit)-cvp(b.price,b.unit,it.unit));
-    return `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:6px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:var(--sh);">
-      <div style="flex:1;min-width:140px;">
-        <div style="font-weight:500;">${cat?cat.name:it.catId}</div>
-        <div style="font-family:monospace;font-size:9px;color:var(--muted);">${it.qty?fN(it.qty)+' '+it.unit:''}</div>
+    const itemName = cat?cat.name:(it.name||it.catId||'Item '+(idx+1));
+    const suppliersWithQuotes = act.filter(s=>state.quotes[s.id]?.[idx]);
+
+    return `<div style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--sh);">
+      <!-- Item header -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1.5px solid var(--border);">
+        <div style="font-family:monospace;font-size:10px;background:var(--tag);padding:3px 8px;border-radius:3px;color:var(--muted);">${String(idx+1).padStart(2,'0')}</div>
+        <div style="font-weight:600;font-size:15px;">${itemName}</div>
+        <div style="font-family:monospace;font-size:10px;color:var(--muted);margin-left:auto;">${it.qty?fN(it.qty)+' '+it.unit:''} ${it.period||''}</div>
       </div>
-      ${bests.length?`<div style="display:flex;gap:16px;flex-wrap:wrap;">${bests.slice(0,3).map((b,bi)=>`<div style="text-align:center;"><div style="font-family:monospace;font-size:${bi===0?'16px':'13px'};font-weight:${bi===0?700:400};color:${bi===0?'var(--green)':'var(--muted)'};">${b.isTiered?'TIERED':fmt(b.price)}<span style="font-size:8px;">/${b.unit}</span></div><div style="font-family:monospace;font-size:9px;color:var(--muted);">${b.name.split(' ')[0]}${bi===0?' ✓':''}</div></div>`).join('')}</div>`:`<span style="font-family:monospace;font-size:11px;color:var(--muted);">No quotes</span>`}
+
+      ${suppliersWithQuotes.length===0 ? '<div style="color:var(--muted);font-size:13px;padding:8px 0;">No quotes received yet.</div>' : `
+      <div style="display:grid;gap:10px;">
+        ${act.map(s=>{
+          const qd = state.quotes[s.id]?.[idx];
+          if(!qd) return '';
+          const rows = qd.rows || [];
+          const firstRow = rows[0] || {};
+          const unitPrice = firstRow.price || (qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price);
+          const unit = firstRow.unit || qd.unit || it.unit;
+          const currency = firstRow.currency || qd.currency || 'USD';
+          const isBest = unitPrice && unitPrice === bestPricePerItem[idx];
+
+          let html = '';
+          html += '<div style="background:'+(isBest?'#f0fbf5':'var(--bg)')+';border:1.5px solid '+(isBest?'var(--green)':'var(--border)')+';border-radius:8px;padding:14px 16px;">';
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">';
+          html += '<div style="display:flex;align-items:center;gap:10px;">';
+          html += '<span style="font-weight:600;font-size:14px;">'+s.name+'</span>';
+          if(isBest) html += '<span style="font-family:monospace;font-size:8px;background:var(--green);color:white;padding:2px 8px;border-radius:3px;">✓ BEST PRICE</span>';
+          html += '</div>';
+          html += '<div style="font-family:monospace;font-size:22px;font-weight:700;color:'+(isBest?'var(--green)':'var(--ink)')+';">';
+          html += (unitPrice?fmtPrice(unitPrice):'—');
+          html += '<span style="font-size:11px;font-weight:400;color:var(--muted);">/ '+unit+'</span>';
+          html += '<span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:4px;">'+currency+'</span>';
+          html += '</div></div>';
+          html += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">';
+          if(firstRow.price_per) html += '<div style="font-size:11px;color:var(--muted);">📦 '+firstRow.price_per+'</div>';
+          if(firstRow.moq||qd.moq) html += '<div style="font-size:11px;color:var(--muted);">📋 MOQ: '+(firstRow.moq||qd.moq)+'</div>';
+          if(firstRow.incoterms||qd.incoterms) html += '<div style="font-size:11px;color:var(--muted);">🚢 '+(firstRow.incoterms||qd.incoterms)+'</div>';
+          if(firstRow.fob||qd.fob) html += '<div style="font-size:11px;color:var(--muted);">📍 FOB: '+(firstRow.fob||qd.fob)+'</div>';
+          if(firstRow.lead||qd.lead) html += '<div style="font-size:11px;color:var(--muted);">⏱ Lead: '+(firstRow.lead||qd.lead)+'</div>';
+          if(firstRow.pay||qd.pay) html += '<div style="font-size:11px;color:var(--muted);">💳 '+(firstRow.pay||qd.pay)+'</div>';
+          if(firstRow.tariff||qd.tariff) html += '<div style="font-size:11px;color:var(--muted);">🏷 Tariff: '+(firstRow.tariff||qd.tariff)+'%</div>';
+          if(firstRow.origin) html += '<div style="font-size:11px;color:var(--muted);">🌍 Origin: '+firstRow.origin+'</div>';
+          if(firstRow.stock||qd.stock) html += '<div style="font-size:11px;color:var(--muted);">🏭 Stock: '+(firstRow.stock||qd.stock)+'</div>';
+          html += '</div>';
+          if(rows.length>1) html += '<div style="margin-top:8px;font-family:monospace;font-size:9px;color:var(--muted);">+ '+(rows.length-1)+' more option(s) — see Responses tab</div>';
+          if(firstRow.comments||qd.notes) html += '<div style="margin-top:6px;font-size:11px;color:var(--muted);font-style:italic;">"'+(firstRow.comments||qd.notes)+'"</div>';
+          html += '</div>';
+          return html;
+        }).join('')}
+      </div>`}
     </div>`;
   }).join('')}
-  ${(maxT-minT)>0?`<div class="kc" style="border-color:var(--green);margin-top:12px;display:inline-flex;"><div class="kc-ring" style="border-color:var(--green)"></div><span class="kc-lab">Potential savings vs highest bidder</span><span class="kc-val" style="color:var(--green);">${fmt(maxT-minT)}</span></div>`:''}
   <div style="margin-top:24px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:20px 24px;">
     <div style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px;">Award Decision</div>
     <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Once you've made your decision, notify all suppliers with one click.</div>
