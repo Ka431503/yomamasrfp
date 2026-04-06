@@ -19,7 +19,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink
 /* TOPBAR */
 .topbar{background:var(--navy);color:#f4f1eb;height:56px;padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:300;border-bottom:3px solid var(--red);}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;}
-.logo em{color:var(--accent);font-style:normal;}
+.logo em{color:#ffffff;font-style:normal;}
 .tbtn{font-family:monospace;font-size:11px;padding:6px 14px;border-radius:3px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#f4f1eb;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
 .tbtn:hover{background:rgba(255,255,255,.1);}
 .tbtn.ac{background:var(--red);border-color:var(--red);}
@@ -944,14 +944,56 @@ async function openInGmail(){
   }
 }
 
+async function uploadRFPAttachment(attachment, rfpNum, itemName){
+  // Upload spec sheet to Supabase Storage
+  try {
+    const fileName = rfpNum + '_' + itemName.replace(/[^a-zA-Z0-9]/g,'_').substring(0,30) + '_' + attachment.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+    // Convert base64 to blob
+    const res = await fetch(attachment.data);
+    const blob = await res.blob();
+    const uploadRes = await fetch(SUPA_URL + '/storage/v1/object/rfp-attachments/' + fileName, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': attachment.type || 'application/pdf',
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    if(uploadRes.ok){
+      // Get signed URL valid for 30 days
+      const signRes = await supaFetch('/storage/v1/object/sign/rfp-attachments/' + fileName, 'POST', {expiresIn: 2592000});
+      if(signRes && signRes.signedURL){
+        return {
+          name: attachment.name,
+          url: SUPA_URL + signRes.signedURL
+        };
+      }
+    }
+  } catch(e) {
+    console.error('Upload error:', e);
+  }
+  return null;
+}
+
 async function generateSupplierToken(supId){
   const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
   const sup = state.suppliers.find(s=>s.id===supId);
   if(!sup){ console.error('Supplier not found'); return null; }
-  // Strip attachments to avoid payload size issues
+  // Save attachment URLs (not base64 data) to keep payload small
   const itemsClean = state.items.map(function(it){
     const c = Object.assign({}, it);
-    delete c.attachments;
+    // Keep only URL references, not base64 data
+    if(c.attachments && c.attachments.length){
+      c.attachments = c.attachments.map(a => ({
+        name: a.name,
+        type: a.type,
+        url: a.uploadedUrl || null  // URL set after upload
+      })).filter(a => a.url);
+    } else {
+      delete c.attachments;
+    }
     return c;
   });
   console.log('Saving token to Supabase...', token);
@@ -993,7 +1035,7 @@ async function sendRFP(supId){
   const rfpNum = state.rfpNumber || 'RFP-2026-001';
   const issueDate = state.rfpDate ? new Date(state.rfpDate+' ').toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'}) : '[Issue Date]';
 
-  const itemLines = state.items.map((it,i)=>{
+  const itemLines = (await Promise.all(state.items.map(async (it,i)=>{
     const cat = CATALOG.find(c=>c.id===it.catId);
     const name = cat ? cat.name : (it.name||'Custom Item');
     const qty = it.qty ? `${new Intl.NumberFormat('en-US').format(it.qty)} ${it.unit} (${it.period||'Annual'})` : 'TBD';
@@ -1001,11 +1043,30 @@ async function sendRFP(supId){
     const delivery = deliveryArr.map(d=>d==='Other'?(it.deliveryOther||'Other'):d).join(' / ');
     const specs = it.specs || '';
     const packaging = it.packaging || '';
-    const attach = it.attachments?.length ? `[Spec sheet: ${it.attachments.map(a=>a.name).join(', ')}]` : '';
+    // Upload attachments and get links
+    let attachLinks = '';
+    if(it.attachments && it.attachments.length){
+      const uploaded = [];
+      for(let ai=0; ai<it.attachments.length; ai++){
+        const att = it.attachments[ai];
+        if(att.uploadedUrl){
+          // Already uploaded
+          uploaded.push({name: att.name, url: att.uploadedUrl});
+        } else {
+          const result = await uploadRFPAttachment(att, rfpNum, name);
+          if(result){
+            // Save URL back to state for future use
+            state.items[i].attachments[ai].uploadedUrl = result.url;
+            uploaded.push(result);
+          }
+        }
+      }
+      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ': ' + u.url).join('\n');
+    }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
-      Delivery Location: ${delivery}${packaging?' | Packaging: '+packaging:''}${specs?' | Specs: '+specs:''}${attach?' '+attach:''}`;
-  }).join('\n\n');
+      Delivery Location: ${delivery}${packaging?' | Packaging: '+packaging:''}${specs?' | Specs: '+specs:''}${attachLinks}`;
+  }))).join('\n\n');
 
   const subject = `Yo Mamas Foods - ${rfpNum} | Quote Request`;
 
@@ -1114,18 +1175,72 @@ async function showArchive(){
     return;
   }
 
-  el.innerHTML = data.map(r => {
+  window._archiveData = data;
+  let html = '';
+  data.forEach((r, ri) => {
     const date = r.closed_at ? new Date(r.closed_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
-    return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">' +
-      '<div style="font-family:monospace;font-size:12px;font-weight:600;background:#e8ecf5;padding:4px 10px;border-radius:4px;flex-shrink:0;">' + (r.rfp_number||'RFP') + '</div>' +
-      '<div style="flex:1;">' +
-        '<div style="font-weight:600;font-size:14px;margin-bottom:3px;">' + (r.rfp_name||r.rfp_number||'RFP') + '</div>' +
-        '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + (r.items_count||0) + ' items · ' + (r.suppliers_count||0) + ' suppliers</div>' +
-      '</div>' +
-      (r.awarded_to ? '<div style="display:flex;align-items:center;gap:6px;background:#f0fbf5;border:1px solid #b3dfc7;border-radius:5px;padding:5px 12px;font-size:13px;color:var(--green);font-weight:600;flex-shrink:0;">🏆 ' + r.awarded_to + '</div>' : '') +
-      '<div style="font-family:monospace;font-size:10px;color:var(--muted);flex-shrink:0;">' + date + '</div>' +
-      '</div>';
-  }).join('');
+    let summary = null;
+    try { summary = r.summary ? JSON.parse(r.summary) : null; } catch(e){}
+
+    html += '<div id="arc_'+ri+'" style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:10px;">';
+    html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+    html += '<div style="font-family:monospace;font-size:12px;font-weight:600;background:#e8ecf5;padding:4px 10px;border-radius:4px;flex-shrink:0;">' + (r.rfp_number||'RFP') + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-weight:600;font-size:14px;margin-bottom:3px;">' + (r.rfp_name||r.rfp_number||'RFP') + '</div>';
+    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + (r.items_count||0) + ' items · ' + (r.suppliers_count||0) + ' suppliers</div>';
+    html += '</div>';
+    if(r.awarded_to){
+      html += '<div style="display:flex;align-items:center;gap:6px;background:#f0fbf5;border:1px solid #b3dfc7;border-radius:5px;padding:5px 12px;font-size:13px;color:var(--green);font-weight:600;flex-shrink:0;">🏆 ' + r.awarded_to + '</div>';
+    }
+    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);flex-shrink:0;">' + date + '</div>';
+    html += '<button onclick="deleteArchiveRecord(\'' + r.id + '\')" style="background:none;border:1px solid #ddd;border-radius:4px;color:#aaa;cursor:pointer;font-size:11px;padding:4px 8px;margin-left:4px;">✕ Delete</button>';
+    html += '</div>';
+
+    if(summary){
+      html += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">';
+      html += '<div onclick="toggleArchiveDetail(' + ri + ')" style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer;margin-bottom:6px;" id="arc_lbl_'+ri+'">▼ View Details</div>';
+      html += '<div id="arc_det_'+ri+'" style="display:none;">';
+      if(summary.items && summary.items.length){
+        html += '<div style="margin-bottom:8px;"><div style="font-family:monospace;font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Items</div>';
+        summary.items.forEach(it => {
+          html += '<div style="font-size:12px;padding:2px 0;">• ' + (it.name||it.catId||'Item') + (it.qty?' — '+it.qty+' '+(it.unit||''):'') + '</div>';
+        });
+        html += '</div>';
+      }
+      if(summary.suppliers && summary.suppliers.length){
+        html += '<div><div style="font-family:monospace;font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Suppliers</div>';
+        summary.suppliers.forEach(s => {
+          const sc = s.status==='accepted'?'var(--green)':s.status==='declined'?'var(--red)':'var(--muted)';
+          html += '<div style="font-size:12px;padding:2px 0;">• ' + s.name + ' <span style="font-size:9px;color:'+sc+';">('+s.status+')</span></div>';
+        });
+        html += '</div>';
+      }
+      html += '</div></div>';
+    }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+
+function toggleArchiveDetail(ri){
+  const det = document.getElementById('arc_det_'+ri);
+  const lbl = document.getElementById('arc_lbl_'+ri);
+  if(!det) return;
+  if(det.style.display === 'none'){
+    det.style.display = 'block';
+    lbl.textContent = '▲ Hide Details';
+  } else {
+    det.style.display = 'none';
+    lbl.textContent = '▼ View Details';
+  }
+}
+
+async function deleteArchiveRecord(id){
+  if(!confirm('Delete this archived RFP? This cannot be undone.')) return;
+  await supaFetch('/rest/v1/rfp_archive?id=eq.'+id, 'DELETE');
+  // Reload archive
+  showArchive();
 }
 
 function copyEmailBody(){

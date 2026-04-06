@@ -105,7 +105,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--nav
 </head>
 <body>
 <div class="topbar">
-  <div class="topbar-title">YO MAMA<em>'S</em> · QUOTE FORM</div>
+  <div class="topbar-title">YO MAMA<em style="color:#fff;font-style:normal;">'S</em> · QUOTE FORM</div>
   <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(255,255,255,.4);">Secure Supplier Portal</div>
 </div>
 <div class="main" id="app">
@@ -283,6 +283,17 @@ function renderForm() {
     html += '<h3>'+String(idx+1).padStart(2,'0')+'. '+name+'</h3>';
     if(it.specs) html += '<div class="specs">Specs: '+it.specs+'</div>';
     if(it.packaging) html += '<div class="specs">Packaging: '+it.packaging+'</div>';
+    // Show spec sheet download links if available
+    if(it.attachments && it.attachments.length){
+      html += '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
+      it.attachments.forEach(function(a){
+        if(a.url){
+          html += '<a href="'+a.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:10px;color:#fff;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.15)'">' +
+            '📎 '+a.name+'</a>';
+        }
+      });
+      html += '</div>';
+    }
     html += '</div>';
     html += '<div class="item-header-right">';
     html += 'Est. Volume: <b>'+(it.qty||'TBD')+' '+(it.unit||'')+'</b> '+(it.period||'Annual')+'<br>';
@@ -396,6 +407,10 @@ function renderForm() {
       html += '<label>Stock Available <span class="hint">optional</span></label>';
       html += '<input placeholder="e.g. 52 pallets in stock" value="'+(o.stock||'')+'" oninput="upd('+idx+','+oi+',\'stock\',this.value)"/>';
       html += '</div>';
+      html += '<div class="fg">';
+      html += '<label>Manufacturer Origin Location <span class="hint">country/city where product is made</span></label>';
+      html += '<input placeholder="e.g. Mexico City, Mexico / Guangdong, China" value="'+(o.origin||'')+'" oninput="upd('+idx+','+oi+',\'origin\',this.value)"/>';
+      html += '</div>';
 
       html += '</div>'; // end cols-3
 
@@ -475,6 +490,7 @@ async function submitQuotes() {
         lead: o.lead_num ? (o.lead_num + ' ' + o.lead_unit) : '',
         pay: o.pay,
         stock: o.stock,
+        origin: o.origin,
         comments: o.comments
       };
     });
