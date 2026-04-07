@@ -1345,12 +1345,21 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
 
 function openAttachment(itemIdx, attachIdx){
   const a = state.items[itemIdx].attachments[attachIdx];
-  if(!a) return;
-  const win = window.open();
-  if(a.type === 'application/pdf'){
-    win.document.write(`<iframe src="${a.data}" style="width:100%;height:100vh;border:none;"></iframe>`);
-  } else {
-    win.document.write(`<img src="${a.data}" style="max-width:100%;"/>`);
+  if(!a || !a.data) return;
+  try {
+    // Convert base64 to blob and open
+    fetch(a.data)
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      });
+  } catch(e) {
+    // Fallback to data URL
+    const link = document.createElement('a');
+    link.href = a.data;
+    link.download = a.name || 'attachment';
+    link.click();
   }
 }
 
