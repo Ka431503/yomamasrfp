@@ -1084,8 +1084,32 @@ async function sendRFP(supId){
     const packaging = it.packaging || '';
     let attachLinks = '';
     if(it.attachments && it.attachments.length){
-      const names = it.attachments.map(a=>a.name).filter(Boolean);
-      if(names.length) attachLinks = '\n      Spec Sheet(s): ' + names.join(', ') + ' (available in the quote form link above)';
+      const attachList = [];
+      for(const att of it.attachments){
+        if(att.uploadedUrl || att.storagePath){
+          // Regenerate signed URL for email
+          try {
+            const pathToSign = att.storagePath || (att.uploadedUrl ? att.uploadedUrl.split('rfp-attachments/')[1].split('?')[0] : null);
+            if(pathToSign){
+              const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToSign, {
+                method: 'POST',
+                headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({expiresIn: 604800}) // 7 days
+              });
+              const signData = await signRes.json();
+              if(signData && signData.signedURL){
+                let url = signData.signedURL.startsWith('http') ? signData.signedURL : 
+                          signData.signedURL.startsWith('/storage') ? SUPA_URL + signData.signedURL :
+                          SUPA_URL + '/storage/v1' + signData.signedURL;
+                attachList.push('      📎 ' + att.name + '\n         ' + url);
+              }
+            }
+          } catch(e) { attachList.push('      📎 ' + att.name); }
+        } else if(att.name) {
+          attachList.push('      📎 ' + att.name + ' (available in the quote form link above)');
+        }
+      }
+      if(attachList.length) attachLinks = '\n      Spec Sheet(s):\n' + attachList.join('\n');
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
