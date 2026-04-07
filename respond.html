@@ -166,49 +166,35 @@ async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
 async function openSpecSheet(encodedUrl, encodedPath) {
   var url = decodeURIComponent(encodedUrl);
   var path = decodeURIComponent(encodedPath);
-  
-  // Get signed URL from Supabase
-  var pathToUse = path;
-  if(!pathToUse && url) {
-    // Extract path from URL if needed
-    var match = url.match(/rfp-attachments\/(.+?)(\?|$)/);
-    if(match) pathToUse = match[1];
+
+  // Open window immediately to avoid popup blocker
+  var win = window.open('', '_blank');
+  win.document.write('<html><body style="margin:0;background:#1a2744;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;"><div style="text-align:center;"><div style="font-size:24px;margin-bottom:16px;">⏳</div><div>Loading file...</div></div></body></html>');
+
+  // Try direct URL first
+  if(url && url !== 'undefined' && url !== ''){
+    win.location.href = url;
+    return;
   }
-  
-  if(pathToUse){
+
+  // Get signed URL
+  if(path && path !== 'undefined' && path !== ''){
     try {
-      var res = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToUse, {
+      var res = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + path, {
         method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': 'Bearer ' + SUPA_KEY,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({expiresIn: 3600})
       });
       var data = await res.json();
-      console.log('Sign data:', data);
       if(data && data.signedURL){
         var signedUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPA_URL + data.signedURL;
-        window.open(signedUrl, '_blank');
+        win.location.href = signedUrl;
         return;
       }
-      if(data && data.error){
-        console.error('Sign error:', data.error);
-      }
-    } catch(e) {
-      console.error('Signed URL error:', e);
-    }
+    } catch(e) { console.error('Sign error:', e); }
   }
-  
-  // Last resort - try direct authenticated download
-  if(pathToUse){
-    var directUrl = SUPA_URL + '/storage/v1/object/authenticated/rfp-attachments/' + pathToUse;
-    window.open(directUrl + '?token=' + SUPA_KEY, '_blank');
-    return;
-  }
-  
-  alert('Unable to open file. Please contact purchasing@yomamasfoods.com');
+
+  win.document.body.innerHTML = '<div style="padding:40px;color:red;">File not available. Please contact purchasing@yomamasfoods.com</div>';
 }
 
 async function supaFetch(path, method, body) {

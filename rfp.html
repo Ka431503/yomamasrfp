@@ -1301,46 +1301,46 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
   const a = atts[attachIdx];
   if(!a) { alert('File not available.'); return; }
 
-  // If file has a storage path, get signed URL
-  const pathToOpen = a.path || (a.url ? (a.url.match(/rfp-attachments\/(.+?)(\?|$)/) || [])[1] : null);
-  if(pathToOpen) {
-    try {
-      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToOpen, {
-        method: 'POST',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': 'Bearer ' + SUPA_KEY,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({expiresIn: 3600})
-      });
-      const signData = await signRes.json();
-      console.log('Supplier attach sign:', signData);
-      if(signData && signData.signedURL) {
-        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
-        window.open(fullUrl, '_blank');
-        return;
-      }
-    } catch(e) { console.error('Signed URL error:', e); }
-  }
+  // Open window immediately (must be synchronous to avoid popup blocker)
+  const win = window.open('', '_blank');
+  win.document.write('<html><body style="margin:0;background:#1a2744;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;"><div style="text-align:center;"><div style="font-size:24px;margin-bottom:16px;">⏳</div><div>Loading file...</div></div></body></html>');
 
-  // If file has a direct URL
-  if(a.url) {
-    window.open(a.url, '_blank');
+  // Try base64 data first (fastest)
+  if(a.data){
+    if(a.type && a.type.includes('pdf')){
+      win.document.body.innerHTML = '';
+      win.document.write('<html><body style="margin:0;"><iframe src="'+a.data+'" style="width:100%;height:100vh;border:none;"></iframe></body></html>');
+    } else {
+      win.document.body.innerHTML = '<img src="'+a.data+'" style="max-width:100%;display:block;margin:auto;"/>';
+    }
     return;
   }
 
-  // Fallback: use base64 data
-  if(a.data) {
-    const win = window.open();
-    if(a.type && a.type.includes('pdf')){
-      win.document.write('<iframe src="'+a.data+'" style="width:100%;height:100vh;border:none;"></iframe>');
-    } else {
-      win.document.write('<img src="'+a.data+'" style="max-width:100%;display:block;margin:auto;"/>');
-    }
-  } else {
-    alert('File not available. The supplier may not have attached documents.');
+  // Try direct URL
+  if(a.url){
+    win.location.href = a.url;
+    return;
   }
+
+  // Get signed URL for storage path
+  const pathToOpen = a.path || (a.url ? (a.url.split('rfp-attachments/')[1] || '').split('?')[0] : null);
+  if(pathToOpen){
+    try {
+      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToOpen, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({expiresIn: 3600})
+      });
+      const signData = await signRes.json();
+      if(signData && signData.signedURL){
+        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
+        win.location.href = fullUrl;
+        return;
+      }
+    } catch(e) { console.error('Sign error:', e); }
+  }
+
+  win.document.body.innerHTML = '<div style="padding:40px;color:red;">File not available. Please contact purchasing@yomamasfoods.com</div>';
 }
 
 function openAttachment(itemIdx, attachIdx){
