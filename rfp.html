@@ -1347,13 +1347,7 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
     return;
   }
 
-  // Try direct URL
-  if(a.url){
-    win.location.href = a.url;
-    return;
-  }
-
-  // Get signed URL for storage path
+  // Get signed URL for storage path (always regenerate - stored URLs expire)
   const pathToOpen = a.path || (a.url ? (a.url.split('rfp-attachments/')[1] || '').split('?')[0] : null);
   if(pathToOpen){
     try {
