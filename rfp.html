@@ -1054,10 +1054,10 @@ async function sendRFP(supId){
 
   const itemLines = (await Promise.all(state.items.map(async (it,i)=>{
     const cat = CATALOG.find(c=>c.id===it.catId);
-    const name = cat ? cat.name : (it.name||'Custom Item');
+    const name = cat ? cat.name : (it.name || 'Item '+(i+1));
     const qty = it.qty ? `${new Intl.NumberFormat('en-US').format(it.qty)} ${it.unit} (${it.period||'Annual'})` : 'TBD';
     const deliveryArr = it.deliveries && it.deliveries.length ? it.deliveries : [it.delivery||'Clearwater, FL'];
-    const delivery = deliveryArr.map(d=>d==='Other'?(it.deliveryOther||'Other'):d).join(' / ');
+    const delivery = deliveryArr.map(d=>d==='Other'?(it.deliveryOther||'Other'):d).join(', ');
     const specs = it.specs || '';
     const packaging = it.packaging || '';
     // Upload attachments and get links
@@ -1085,7 +1085,7 @@ async function sendRFP(supId){
       Delivery Location: ${delivery}${packaging?' | Packaging: '+packaging:''}${specs?' | Specs: '+specs:''}${attachLinks}`;
   }))).join('\n\n');
 
-  const subject = `Yo Mamas Foods - ${rfpNum} | Quote Request`;
+  const subject = `Yo Mamas Foods - ${rfpNum} | ${state.rfpName ? state.rfpName + ' — ' : ''}Quote Request`;
 
   const body =
 `Dear ${sup.contact||sup.name},
@@ -1302,9 +1302,10 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
   if(!a) { alert('File not available.'); return; }
 
   // If file has a storage path, get signed URL
-  if(a.path) {
+  const pathToOpen = a.path || (a.url ? (a.url.match(/rfp-attachments\/(.+?)(\?|$)/) || [])[1] : null);
+  if(pathToOpen) {
     try {
-      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + a.path, {
+      const signRes = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToOpen, {
         method: 'POST',
         headers: {
           'apikey': SUPA_KEY,
@@ -1314,8 +1315,10 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
         body: JSON.stringify({expiresIn: 3600})
       });
       const signData = await signRes.json();
+      console.log('Supplier attach sign:', signData);
       if(signData && signData.signedURL) {
-        window.open(SUPA_URL + signData.signedURL, '_blank');
+        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
+        window.open(fullUrl, '_blank');
         return;
       }
     } catch(e) { console.error('Signed URL error:', e); }

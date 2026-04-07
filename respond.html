@@ -163,6 +163,54 @@ async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
   return null;
 }
 
+async function openSpecSheet(encodedUrl, encodedPath) {
+  var url = decodeURIComponent(encodedUrl);
+  var path = decodeURIComponent(encodedPath);
+  
+  // Get signed URL from Supabase
+  var pathToUse = path;
+  if(!pathToUse && url) {
+    // Extract path from URL if needed
+    var match = url.match(/rfp-attachments\/(.+?)(\?|$)/);
+    if(match) pathToUse = match[1];
+  }
+  
+  if(pathToUse){
+    try {
+      var res = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToUse, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': 'Bearer ' + SUPA_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({expiresIn: 3600})
+      });
+      var data = await res.json();
+      console.log('Sign data:', data);
+      if(data && data.signedURL){
+        var signedUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPA_URL + data.signedURL;
+        window.open(signedUrl, '_blank');
+        return;
+      }
+      if(data && data.error){
+        console.error('Sign error:', data.error);
+      }
+    } catch(e) {
+      console.error('Signed URL error:', e);
+    }
+  }
+  
+  // Last resort - try direct authenticated download
+  if(pathToUse){
+    var directUrl = SUPA_URL + '/storage/v1/object/authenticated/rfp-attachments/' + pathToUse;
+    window.open(directUrl + '?token=' + SUPA_KEY, '_blank');
+    return;
+  }
+  
+  alert('Unable to open file. Please contact purchasing@yomamasfoods.com');
+}
+
 async function supaFetch(path, method, body) {
   method = method || 'GET';
   var opts = {
@@ -275,10 +323,11 @@ function renderForm() {
   // Header banner
   html += '<div class="rfp-info">';
   html += '<h2>QUOTE REQUEST</h2>';
-  if(rec.rfp_number || rec.rfp_name){
-    html += '<div style="font-family:monospace;font-size:13px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:6px;">';
-    html += (rec.rfp_number||'') + (rec.rfp_name && rec.rfp_name !== rec.rfp_number ? ' &nbsp;—&nbsp; ' + rec.rfp_name : '');
-    html += '</div>';
+  if(rec.rfp_name && rec.rfp_name !== rec.rfp_number){
+    html += '<div style="font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;">'+rec.rfp_name+'</div>';
+  }
+  if(rec.rfp_number){
+    html += '<div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.6);margin-bottom:8px;">'+rec.rfp_number+'</div>';
   }
   html += '<div class="sub">Yo Mama\'s Foods Co. &nbsp;·&nbsp; purchasing@yomamasfoods.com</div>';
   html += '<div class="greeting">Dear <strong>'+rec.supplier_name+'</strong>,<br>';
@@ -287,7 +336,7 @@ function renderForm() {
 
   for(var idx=0; idx<items.length; idx++) {
     var it = items[idx];
-    var name = it.name || it.catId || ('Item '+(idx+1));
+    var name = it.name || ('Item '+(idx+1));
     var opts = options[idx] || [newOption(it)];
 
     html += '<div class="item-card">';
@@ -300,13 +349,16 @@ function renderForm() {
     if(it.packaging) html += '<div class="specs">Packaging: '+it.packaging+'</div>';
     // Show spec sheet download links if available
     if(it.attachments && it.attachments.length){
-      html += '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
-      it.attachments.forEach(function(a){
-        if(a.url){
-          html += '<a href="'+a.url+'" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:10px;color:#fff;text-decoration:none;">📎 '+a.name+'</a>';
-        }
-      });
-      html += '</div>';
+      var hasLinks = it.attachments.some(function(a){ return a.url || a.path; });
+      if(hasLinks){
+        html += '<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">';
+        it.attachments.forEach(function(a){
+          if(a.url || a.path){
+            html += '<button onclick="openSpecSheet(\''+encodeURIComponent(a.url||'')+'\',\''+encodeURIComponent(a.path||'')+'\')" style="display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:4px;padding:4px 10px;font-family:monospace;font-size:10px;color:#fff;cursor:pointer;" onmouseover="this.style.background=\'rgba(255,255,255,.25)\'" onmouseout="this.style.background=\'rgba(255,255,255,.15)\'">📎 '+a.name+'</button>';
+          }
+        });
+        html += '</div>';
+      }
     }
     html += '</div>';
     html += '<div class="item-header-right">';
