@@ -192,7 +192,15 @@ async function openSpecSheet(encodedUrl, encodedPath) {
       var data = await res.json();
       console.log('Sign response:', JSON.stringify(data));
       if(data && data.signedURL){
-        var signedUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPA_URL + data.signedURL;
+        var signedUrl;
+        if(data.signedURL.startsWith('http')){
+          signedUrl = data.signedURL;
+        } else if(data.signedURL.startsWith('/storage')){
+          signedUrl = SUPA_URL + data.signedURL;
+        } else {
+          // Missing /storage/v1 prefix
+          signedUrl = SUPA_URL + '/storage/v1' + data.signedURL;
+        }
         win.location.href = signedUrl;
         return;
       }

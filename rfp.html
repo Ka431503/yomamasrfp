@@ -975,7 +975,10 @@ async function uploadRFPAttachment(attachment, rfpNum, itemName){
       const signData = await signRes.json();
       console.log('Sign response:', signData);
       if(signData && signData.signedURL){
-        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
+        let fullUrl;
+        if(signData.signedURL.startsWith('http')){ fullUrl = signData.signedURL; }
+        else if(signData.signedURL.startsWith('/storage')){ fullUrl = SUPA_URL + signData.signedURL; }
+        else { fullUrl = SUPA_URL + '/storage/v1' + signData.signedURL; }
         return {
           name: attachment.name,
           path: fileName,  // store path for re-signing later
@@ -1337,7 +1340,10 @@ async function openSupplierAttachment(supId, itemIdx, attachIdx){
       });
       const signData = await signRes.json();
       if(signData && signData.signedURL){
-        const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
+        let fullUrl;
+        if(signData.signedURL.startsWith('http')){ fullUrl = signData.signedURL; }
+        else if(signData.signedURL.startsWith('/storage')){ fullUrl = SUPA_URL + signData.signedURL; }
+        else { fullUrl = SUPA_URL + '/storage/v1' + signData.signedURL; }
         win.location.href = fullUrl;
         return;
       }
