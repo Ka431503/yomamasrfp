@@ -975,10 +975,10 @@ async function uploadRFPAttachment(attachment, rfpNum, itemName){
       const signData = await signRes.json();
       console.log('Sign response:', signData);
       if(signData && signData.signedURL){
-        // signedURL already contains /storage/v1/object/sign/...
         const fullUrl = signData.signedURL.startsWith('http') ? signData.signedURL : SUPA_URL + signData.signedURL;
         return {
           name: attachment.name,
+          path: fileName,  // store path for re-signing later
           url: fullUrl
         };
       }
@@ -1004,8 +1004,9 @@ async function generateSupplierToken(supId){
       c.attachments = c.attachments.map(a => ({
         name: a.name,
         type: a.type,
-        url: a.uploadedUrl || null  // URL set after upload
-      })).filter(a => a.url);
+        url: a.uploadedUrl || null,
+        path: a.storagePath || null
+      })).filter(a => a.url || a.path);
     } else {
       delete c.attachments;
     }
@@ -1042,15 +1043,33 @@ async function sendRFP(supId){
   const sup = state.suppliers.find(s=>s.id===supId);
   if(!sup) return;
 
-  // Generate token first (save to cloud happens async after)
-  const _token = await generateSupplierToken(supId);
-  const responseLink = _token ? (NETLIFY_URL+'/respond.html?token='+_token) : null;
-  // Save to cloud in background
-  saveProjectToCloud().catch(e=>console.log('Cloud save error:', e));
-
   const deadline = state.rfpDeadline ? new Date(state.rfpDeadline+' ').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '[DEADLINE TBD]';
   const rfpNum = state.rfpNumber || 'RFP-2026-001';
   const issueDate = state.rfpDate ? new Date(state.rfpDate+' ').toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'numeric'}) : '[Issue Date]';
+
+  // STEP 1: Upload attachments first so URLs are ready for token
+  for(let i=0; i<state.items.length; i++){
+    const it = state.items[i];
+    const cat = CATALOG.find(c=>c.id===it.catId);
+    const name = cat ? cat.name : (it.name || 'Item '+(i+1));
+    if(it.attachments && it.attachments.length){
+      for(let ai=0; ai<it.attachments.length; ai++){
+        const att = it.attachments[ai];
+        if(!att.uploadedUrl){
+          const result = await uploadRFPAttachment(att, rfpNum, name);
+          if(result){
+            state.items[i].attachments[ai].uploadedUrl = result.url;
+            state.items[i].attachments[ai].storagePath = result.path;
+          }
+        }
+      }
+    }
+  }
+
+  // STEP 2: Generate token (now attachments have URLs)
+  const _token = await generateSupplierToken(supId);
+  const responseLink = _token ? (NETLIFY_URL+'/respond.html?token='+_token) : null;
+  saveProjectToCloud().catch(e=>console.log('Cloud save error:', e));
 
   const itemLines = (await Promise.all(state.items.map(async (it,i)=>{
     const cat = CATALOG.find(c=>c.id===it.catId);
@@ -1060,26 +1079,10 @@ async function sendRFP(supId){
     const delivery = deliveryArr.map(d=>d==='Other'?(it.deliveryOther||'Other'):d).join(', ');
     const specs = it.specs || '';
     const packaging = it.packaging || '';
-    // Upload attachments and get links
     let attachLinks = '';
     if(it.attachments && it.attachments.length){
-      const uploaded = [];
-      for(let ai=0; ai<it.attachments.length; ai++){
-        const att = it.attachments[ai];
-        if(att.uploadedUrl){
-          // Already uploaded
-          uploaded.push({name: att.name, url: att.uploadedUrl});
-        } else {
-          const result = await uploadRFPAttachment(att, rfpNum, name);
-          if(result){
-            // Save URL back to state for future use
-            state.items[i].attachments[ai].uploadedUrl = result.url;
-            // Use original filename, not storage filename
-            uploaded.push({name: att.name, url: result.url});
-          }
-        }
-      }
-      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ' (available in the quote form link above)').join('\n');
+      const names = it.attachments.map(a=>a.name).filter(Boolean);
+      if(names.length) attachLinks = '\n      Spec Sheet(s): ' + names.join(', ') + ' (available in the quote form link above)';
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
