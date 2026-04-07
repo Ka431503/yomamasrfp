@@ -1074,11 +1074,12 @@ async function sendRFP(supId){
           if(result){
             // Save URL back to state for future use
             state.items[i].attachments[ai].uploadedUrl = result.url;
-            uploaded.push(result);
+            // Use original filename, not storage filename
+            uploaded.push({name: att.name, url: result.url});
           }
         }
       }
-      if(uploaded.length) attachLinks = '\n      Spec Sheet(s) attached — open the quote form link above to view and download:\n' + uploaded.map(u=>'      📎 ' + u.name).join('\n');
+      if(uploaded.length) attachLinks = '\n      Spec Sheet(s):\n' + uploaded.map(u=>'      📎 ' + u.name + ' (available in the quote form link above)').join('\n');
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
