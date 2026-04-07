@@ -171,21 +171,26 @@ async function openSpecSheet(encodedUrl, encodedPath) {
   var win = window.open('', '_blank');
   win.document.write('<html><body style="margin:0;background:#1a2744;color:#fff;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;"><div style="text-align:center;"><div style="font-size:24px;margin-bottom:16px;">⏳</div><div>Loading file...</div></div></body></html>');
 
-  // Try direct URL first
-  if(url && url !== 'undefined' && url !== ''){
-    win.location.href = url;
-    return;
+  // Extract path from URL if path not provided
+  var pathToUse = path;
+  if((!pathToUse || pathToUse === 'undefined') && url && url !== 'undefined'){
+    // Extract filename from URL
+    var urlParts = url.split('rfp-attachments/');
+    if(urlParts.length > 1){
+      pathToUse = urlParts[1].split('?')[0];
+    }
   }
 
-  // Get signed URL
-  if(path && path !== 'undefined' && path !== ''){
+  // Always regenerate signed URL using path (URLs expire)
+  if(pathToUse && pathToUse !== 'undefined' && pathToUse !== ''){
     try {
-      var res = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + path, {
+      var res = await fetch(SUPA_URL + '/storage/v1/object/sign/rfp-attachments/' + pathToUse, {
         method: 'POST',
         headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({expiresIn: 3600})
       });
       var data = await res.json();
+      console.log('Sign response:', JSON.stringify(data));
       if(data && data.signedURL){
         var signedUrl = data.signedURL.startsWith('http') ? data.signedURL : SUPA_URL + data.signedURL;
         win.location.href = signedUrl;
@@ -194,7 +199,7 @@ async function openSpecSheet(encodedUrl, encodedPath) {
     } catch(e) { console.error('Sign error:', e); }
   }
 
-  win.document.body.innerHTML = '<div style="padding:40px;color:red;">File not available. Please contact purchasing@yomamasfoods.com</div>';
+  win.document.body.innerHTML = '<div style="padding:40px;font-family:monospace;color:#c8102e;">Error loading file.<br><br>Path: '+pathToUse+'<br><br>Please contact purchasing@yomamasfoods.com</div>';
 }
 
 async function supaFetch(path, method, body) {
