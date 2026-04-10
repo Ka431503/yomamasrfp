@@ -151,12 +151,18 @@ async function uploadFileToStorage(file, token, itemIdx, fileIdx) {
       body: JSON.stringify({expiresIn: 31536000})
     });
     const signData = await signRes.json();
+    var signedUrl = null;
+    if(signData.signedURL){
+      if(signData.signedURL.startsWith('http')){ signedUrl = signData.signedURL; }
+      else if(signData.signedURL.startsWith('/storage')){ signedUrl = SUPA_URL + signData.signedURL; }
+      else { signedUrl = SUPA_URL + '/storage/v1' + signData.signedURL; }
+    }
     return {
       name: file.name,
       type: file.type,
       size: file.size,
       path: fileName,
-      url: signData.signedURL ? (SUPA_URL + signData.signedURL) : null
+      url: signedUrl
     };
   }
   console.error('Upload failed:', res.status, await res.text());
@@ -381,12 +387,11 @@ function renderForm() {
       html += '</div>';
 
       // UNIT PRICE - Required, highlighted first
-      html += '<div style="background:#fff8e1;border:2px solid #f0c040;border-radius:8px;padding:14px 16px;margin-bottom:14px;">';
-      html += '<div style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#a07800;margin-bottom:10px;">★ Required Field</div>';
+      html += '<div style="background:#f8f9fc;border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;">';
       html += '<div class="field-row cols-3">';
       html += '<div class="fg">';
-      html += '<label>Unit Price <span class="req">*</span></label>';
-      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:20px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;border-color:#f0c040;background:#fff;"/>';
+      html += '<label>Price</label>';
+      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:20px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;background:#fff;"/>';
       html += '</div>';
       html += '<div class="fg">';
       html += '<label>Currency</label>';
@@ -402,6 +407,10 @@ function renderForm() {
 
       // Unit of Measure + MOQ
       html += '<div class="field-row cols-3">';
+      html += '<div class="fg">';
+      html += '<label>Unit Price <span class="req">*</span></label>';
+      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+(o.unit_price||'')+'" oninput="upd('+idx+','+oi+',\'unit_price\',this.value)" style="font-size:18px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;border-color:var(--red);"/>';
+      html += '</div>';
       html += '<div class="fg">';
       html += '<label>Unit of Measure</label>';
       html += '<input placeholder="e.g. each, case, pallet, LB, GL" value="'+o.unit+'" oninput="upd('+idx+','+oi+',\'unit\',this.value)"/>';
@@ -533,13 +542,14 @@ async function submitQuotes() {
 
   for(var idx=0; idx<rec.items.length; idx++) {
     var opts = options[idx] || [];
-    var validOpts = opts.filter(function(o){ return o.price_each && parseFloat(o.price_each) > 0; });
+    var validOpts = opts.filter(function(o){ return o.unit_price && parseFloat(o.unit_price) > 0; });
     if(validOpts.length) hasAny = true;
 
     // Build rows for display
     var rows = opts.map(function(o){
       return {
-        price: parseFloat(o.price_each)||null,
+        price: parseFloat(o.unit_price)||parseFloat(o.price_each)||null,
+        price_each: parseFloat(o.price_each)||null,
         price_per: o.price_per,
         currency: o.currency||'USD',
         unit: o.unit||rec.items[idx].unit,
@@ -558,7 +568,7 @@ async function submitQuotes() {
 
     finalQuotes[idx] = {
       rows: rows,
-      price: validOpts.length ? parseFloat(validOpts[0].price_each) : null,
+      price: validOpts.length ? (parseFloat(validOpts[0].unit_price)||parseFloat(validOpts[0].price_each)) : null,
       currency: validOpts.length ? validOpts[0].currency : 'USD',
       unit: validOpts.length ? (validOpts[0].unit||rec.items[idx].unit) : rec.items[idx].unit,
       lead: validOpts.length && validOpts[0].lead_num ? (validOpts[0].lead_num+' '+validOpts[0].lead_unit) : '',

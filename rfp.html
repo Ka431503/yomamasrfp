@@ -2023,6 +2023,7 @@ function renderAnalysis(){
           const rows = qd.rows || [];
           const firstRow = rows[0] || {};
           const unitPrice = firstRow.price || (qd.tiers?.length?parseFloat(qd.tiers[0].price):qd.price);
+          const priceEach = firstRow.price_each || null;
           const unit = firstRow.unit || qd.unit || it.unit;
           const currency = firstRow.currency || qd.currency || 'USD';
           const isBest = unitPrice && unitPrice === bestPricePerItem[idx];
@@ -2034,10 +2035,20 @@ function renderAnalysis(){
           html += '<span style="font-weight:600;font-size:14px;">'+s.name+'</span>';
           if(isBest) html += '<span style="font-family:monospace;font-size:8px;background:var(--green);color:white;padding:2px 8px;border-radius:3px;">✓ BEST PRICE</span>';
           html += '</div>';
+          html += '<div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;">';
+          html += '<div>';
+          html += '<div style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:2px;">Unit Price</div>';
           html += '<div style="font-family:monospace;font-size:22px;font-weight:700;color:'+(isBest?'var(--green)':'var(--ink)')+';">';
           html += (unitPrice?fmtPrice(unitPrice):'—');
           html += '<span style="font-size:11px;font-weight:400;color:var(--muted);">/ '+unit+'</span>';
           html += '<span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:4px;">'+currency+'</span>';
+          html += '</div></div>';
+          if(priceEach){
+            html += '<div>';
+            html += '<div style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:2px;">Price</div>';
+            html += '<div style="font-family:monospace;font-size:14px;font-weight:500;color:var(--muted);">'+fmtPrice(priceEach)+'</div>';
+            html += '</div>';
+          }
           html += '</div></div>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">';
           if(firstRow.price_per) html += '<div style="font-size:11px;color:var(--muted);">📦 '+firstRow.price_per+'</div>';
