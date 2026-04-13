@@ -1348,16 +1348,17 @@ function switchSettingsTab(tab){
 }
 
 function renderCatalogSettings(el, editIdx, searchQ){
+  if(searchQ !== undefined) _catalogSearchQ = searchQ;
+  const catalogQuery = _catalogSearchQ.toLowerCase();
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" value="'+(catalogQuery||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" value="'+(_catalogSearchQ||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
 
-  const catalogQuery = _catalogSearchQ.toLowerCase();
   CATALOG.forEach(function(item, i){
     if(catalogQuery && !item.name.toLowerCase().includes(catalogQuery) && !item.sku.toLowerCase().includes(catalogQuery)) return;
     const isEditing = editIdx === i;
@@ -1407,17 +1408,18 @@ function saveCatalogEdit(i){
 }
 
 function renderSupplierSettings(el, editIdx, searchQ){
+  if(searchQ !== undefined) _supplierSearchQ = searchQ;
+  const supplierQuery = _supplierSearchQ.toLowerCase();
   const suppliers = PRESET_SUPPLIERS_TEMPLATE;
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" value="'+(supplierQuery||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" value="'+(_supplierSearchQ||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
 
-  const supplierQuery = _supplierSearchQ.toLowerCase();
   suppliers.forEach(function(s, i){
     if(supplierQuery && !s.name.toLowerCase().includes(supplierQuery) && !s.email.toLowerCase().includes(supplierQuery)) return;
     const isEditing = editIdx === i;
