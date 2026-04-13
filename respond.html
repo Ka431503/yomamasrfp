@@ -389,52 +389,45 @@ function renderForm() {
       }
       html += '</div>';
 
-      // UNIT PRICE - Required, highlighted first
-      html += '<div style="background:#f8f9fc;border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:14px;">';
+      // ROW 1: Price (optional) | Currency | Pricing Basis
       html += '<div class="field-row cols-3">';
       html += '<div class="fg">';
-      html += '<label>Price</label>';
-      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:20px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;background:#fff;"/>';
+      html += '<label>Price <span class="hint">optional — e.g. $249.45/TH</span></label>';
+      html += '<input type="number" step="0.00001" placeholder="e.g. 249.45" value="'+o.price_each+'" oninput="upd('+idx+','+oi+',\'price_each\',this.value)" style="font-size:15px;font-weight:600;font-family:\'IBM Plex Mono\',monospace;"/>';
       html += '</div>';
       html += '<div class="fg">';
       html += '<label>Currency</label>';
-      html += '<select onchange="upd('+idx+','+oi+',\'currency\',this.value)" style="background:#fff;">';
+      html += '<select onchange="upd('+idx+','+oi+',\'currency\',this.value)">';
       CURRENCIES.forEach(function(c){ html += '<option'+(o.currency===c?' selected':'')+'>'+c+'</option>'; });
       html += '</select></div>';
       html += '<div class="fg">';
       html += '<label>Pricing Basis <span class="hint">e.g. per each, per TH, per case</span></label>';
-      html += '<input placeholder="e.g. per each / per 1,000 / per case of 12" value="'+o.price_per+'" style="background:#fff;" oninput="upd('+idx+','+oi+',\'price_per\',this.value)"/>';
-      html += '</div>';
+      html += '<input placeholder="e.g. per each / per TH / per case" value="'+o.price_per+'" oninput="upd('+idx+','+oi+',\'price_per\',this.value)"/>';
       html += '</div>';
       html += '</div>';
 
-      // Unit of Measure + MOQ
+      // ROW 2: Unit Price * | Unit of Measure | MOQ
+      html += '<div style="background:#fff8e1;border:2px solid #f0c040;border-radius:8px;padding:14px 16px;margin:10px 0 14px;">';
+      html += '<div style="font-family:monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#a07800;margin-bottom:10px;">★ Required</div>';
       html += '<div class="field-row cols-3">';
       html += '<div class="fg">';
-      html += '<label>Unit Price <span class="req">*</span></label>';
-      html += '<input type="number" step="0.00001" placeholder="0.00000" value="'+(o.unit_price||'')+'" oninput="upd('+idx+','+oi+',\'unit_price\',this.value)" style="font-size:18px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;border-color:var(--red);"/>';
+      html += '<label>Unit Price <span class="req">*</span> <span class="hint">e.g. 0.22580</span></label>';
+      html += '<input type="number" step="0.00001" placeholder="e.g. 0.22580" value="'+(o.unit_price||'')+'" oninput="upd('+idx+','+oi+',\'unit_price\',this.value)" style="font-size:20px;font-weight:700;font-family:\'IBM Plex Mono\',monospace;border-color:#f0c040;background:#fff;"/>';
       html += '</div>';
       html += '<div class="fg">';
       html += '<label>Unit of Measure</label>';
-      html += '<input placeholder="e.g. each, case, pallet, LB, GL" value="'+o.unit+'" oninput="upd('+idx+','+oi+',\'unit\',this.value)"/>';
+      html += '<input placeholder="e.g. each, case, pallet, LB, GL" value="'+o.unit+'" oninput="upd('+idx+','+oi+',\'unit\',this.value)" style="background:#fff;"/>';
       html += '</div>';
       html += '<div class="fg">';
       html += '<label>MOQ <span class="hint">minimum order quantity</span></label>';
-      html += '<input placeholder="e.g. 1 pallet / 5,000 units / no minimum" value="'+o.moq+'" oninput="upd('+idx+','+oi+',\'moq\',this.value)"/>';
+      html += '<input placeholder="e.g. 1 pallet / 5,000 units" value="'+o.moq+'" oninput="upd('+idx+','+oi+',\'moq\',this.value)" style="background:#fff;"/>';
       html += '</div>';
-      html += '<div class="fg"></div>';
-      html += '</div>';
+      html += '</div></div>';
 
       html += '<hr class="field-divider"/>';
 
       // Incoterms + FOB
       html += '<div class="field-row cols-2">';
-      html += '<div class="fg">';
-      html += '<label>Incoterms</label>';
-      html += '<select onchange="upd('+idx+','+oi+',\'incoterms\',this.value)">';
-      INCOTERMS.forEach(function(t){ html += '<option'+(o.incoterms===t?' selected':'')+'>'+t+'</option>'; });
-      html += '</select></div>';
-
       html += '<div class="fg">';
       html += '<label>FOB Point <span class="hint">near Florida or NE US preferred</span></label>';
       html += '<input placeholder="City, State (e.g. West Palm Beach, FL)" value="'+o.fob+'" oninput="upd('+idx+','+oi+',\'fob\',this.value)"/>';
