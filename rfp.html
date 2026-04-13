@@ -2584,7 +2584,8 @@ function renderAnalysis(){
           }
           html += '</div></div>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">';
-          if(firstRow.price_per) html += '<div style="font-size:11px;color:var(--muted);">📦 '+firstRow.price_per+'</div>';
+          if(firstRow.price_each) html += '<div style="font-size:11px;color:var(--muted);">💰 Price: $'+parseFloat(firstRow.price_each).toFixed(5)+(firstRow.price_per?' / '+firstRow.price_per:'')+'</div>';
+          if(firstRow.price_per && !firstRow.price_each) html += '<div style="font-size:11px;color:var(--muted);">📦 '+firstRow.price_per+'</div>';
           if(firstRow.moq||qd.moq) html += '<div style="font-size:11px;color:var(--muted);">📋 MOQ: '+(firstRow.moq||qd.moq)+'</div>';
           if(firstRow.incoterms||qd.incoterms) html += '<div style="font-size:11px;color:var(--muted);">🚢 '+(firstRow.incoterms||qd.incoterms)+'</div>';
           if(firstRow.fob||qd.fob) html += '<div style="font-size:11px;color:var(--muted);">📍 FOB: '+(firstRow.fob||qd.fob)+'</div>';
