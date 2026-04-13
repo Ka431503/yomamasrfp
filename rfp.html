@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SETTINGS-V8 -->
 <!-- VERSION: 2026-03-31-v5 -->
 <html lang="en">
 <head>
@@ -1328,8 +1327,6 @@ async function deleteArchiveRecord(id){
 }
 
 function showSettings(){
-  _catalogSearchQ = '';
-  _supplierSearchQ = '';
   document.getElementById('settingsOv').classList.add('open');
   switchSettingsTab('catalog');
 }
@@ -1348,18 +1345,17 @@ function switchSettingsTab(tab){
   else if(tab === 'company') renderCompanySettings(el);
 }
 
-function renderCatalogSettings(el, editIdx, searchQ){
-  if(searchQ !== undefined) _catalogSearchQ = searchQ;
-  const catalogQuery = _catalogSearchQ.toLowerCase();
+function renderCatalogSettings(el, editIdx){
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" value="'+(_catalogSearchQ||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
 
+  const catalogQuery = (editIdx === undefined) ? (document.getElementById('catalog_search') ? document.getElementById('catalog_search').value.toLowerCase() : '') : '';
   CATALOG.forEach(function(item, i){
     if(catalogQuery && !item.name.toLowerCase().includes(catalogQuery) && !item.sku.toLowerCase().includes(catalogQuery)) return;
     const isEditing = editIdx === i;
@@ -1379,15 +1375,14 @@ function renderCatalogSettings(el, editIdx, searchQ){
       html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div data-catidx="' + realIdx + '" onclick="catalogRowClick(this)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);width:30px;flex-shrink:0;">' + (i+1) + '</div>';
       html += '<div style="flex:1;min-width:0;">';
       html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
       html += '</div>';
-      const realIdx = CATALOG.indexOf(item);
-
-      html += '<button onclick="deleteCatalogItem(' + realIdx + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+      html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
@@ -1408,19 +1403,18 @@ function saveCatalogEdit(i){
   renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
-function renderSupplierSettings(el, editIdx, searchQ){
-  if(searchQ !== undefined) _supplierSearchQ = searchQ;
-  const supplierQuery = _supplierSearchQ.toLowerCase();
+function renderSupplierSettings(el, editIdx){
   const suppliers = PRESET_SUPPLIERS_TEMPLATE;
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" value="'+(_supplierSearchQ||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
 
+  const supplierQuery = (editIdx === undefined) ? (document.getElementById('supplier_search') ? document.getElementById('supplier_search').value.toLowerCase() : '') : '';
   suppliers.forEach(function(s, i){
     if(supplierQuery && !s.name.toLowerCase().includes(supplierQuery) && !s.email.toLowerCase().includes(supplierQuery)) return;
     const isEditing = editIdx === i;
@@ -1440,14 +1434,13 @@ function renderSupplierSettings(el, editIdx, searchQ){
       html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div data-catidx="' + realIdx + '" onclick="catalogRowClick(this)" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
       html += '<div style="flex:1;min-width:0;">';
       html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s._custom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
-      const realSupIdx = PRESET_SUPPLIERS_TEMPLATE.indexOf(s);
-
-      html += '<button onclick="deleteMasterSupplier(' + realSupIdx + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+      html += '<button onclick="deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
@@ -1493,9 +1486,6 @@ function addCatalogItem(){
 }
 
 // Default company info
-let _catalogSearchQ = '';
-let _supplierSearchQ = '';
-
 const DEFAULT_COMPANY = {
   name: "Yo Mamas Foods",
   email: "purchasing@yomamasfoods.com",
@@ -1609,32 +1599,17 @@ async function saveCompanySettings(){
   setTimeout(()=>{ if(btn){ btn.textContent=orig; btn.style.background='var(--navy)'; }}, 2000);
 }
 
-function catalogRowClick(el){
-  if(event.target.tagName === 'BUTTON') return; // don't trigger on delete button
-  const idx = parseInt(el.getAttribute('data-catidx'));
-  renderCatalogSettings(document.getElementById('settingsContent'), idx);
-}
-
-function supplierRowClick(el){
-  if(event.target.tagName === 'BUTTON') return;
-  const idx = parseInt(el.getAttribute('data-supidx'));
-  renderSupplierSettings(document.getElementById('settingsContent'), idx);
-}
-
 function filterCatalog(q){
-  _catalogSearchQ = q;
-  const el = document.getElementById('settingsContent');
-  renderCatalogSettings(el);
-  const inp = document.getElementById('catalog_search');
-  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+  renderCatalogSettings(document.getElementById('settingsContent'));
+  // Restore search value after re-render
+  const el = document.getElementById('catalog_search');
+  if(el){ el.value = q; el.focus(); }
 }
 
 function filterSuppliers(q){
-  _supplierSearchQ = q;
-  const el = document.getElementById('settingsContent');
-  renderSupplierSettings(el);
-  const inp = document.getElementById('supplier_search');
-  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+  renderSupplierSettings(document.getElementById('settingsContent'));
+  const el = document.getElementById('supplier_search');
+  if(el){ el.value = q; el.focus(); }
 }
 
 async function saveCatalogAdd(){
@@ -1702,30 +1677,33 @@ async function loadCatalogFromStorage(){
   try {
     const rows = await supaFetch('/rest/v1/ym_catalog?deleted=eq.false&order=sort_order.asc');
     if(rows && rows.length){
+      // Merge: update existing items, add new ones
       rows.forEach(row => {
         const existing = CATALOG.findIndex(c=>c.id===row.id);
         if(existing >= 0){
-          // Update existing item name/sku/units from Supabase
           CATALOG[existing].name = row.name;
           CATALOG[existing].sku = row.sku;
-          if(row.units && row.units.length) CATALOG[existing].units = row.units;
-          CATALOG[existing]._synced = true;
+          CATALOG[existing].units = row.units || CATALOG[existing].units;
         } else {
-          // Add custom item that only exists in Supabase
           CATALOG.push({
-            id: row.id, name: row.name, sku: row.sku||'',
-            units: row.units || ['Units'], cat: row.cat || 'other',
-            _custom: true, _synced: true
+            id: row.id, name: row.name, sku: row.sku,
+            units: row.units || ['Units'], cat: row.cat || 'other', _custom: true
           });
         }
       });
-      // Remove only items that were previously synced but now deleted in Supabase
+      // Remove items marked deleted in Supabase
       const activeIds = rows.map(r=>r.id);
       for(let i=CATALOG.length-1;i>=0;i--){
+        // Only remove if it was a synced item (exists in Supabase) but now deleted
         if(CATALOG[i]._synced && !activeIds.includes(CATALOG[i].id)){
           CATALOG.splice(i,1);
         }
       }
+      // Mark all loaded items as synced
+      rows.forEach(row => {
+        const item = CATALOG.find(c=>c.id===row.id);
+        if(item) item._synced = true;
+      });
     }
   } catch(e){ console.error('Load catalog error:', e); }
 }
@@ -2906,7 +2884,6 @@ async function loadCustomSuppliers(){
     const rows = await supaFetch('/rest/v1/ym_suppliers?deleted=eq.false&order=sort_order.asc');
     if(rows && rows.length){
       rows.forEach(row => {
-        if(row.id === '_company_info') return; // skip company info row
         const existing = PRESET_SUPPLIERS_TEMPLATE.findIndex(s=>s.email===row.email);
         if(existing >= 0){
           PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
@@ -2919,13 +2896,6 @@ async function loadCustomSuppliers(){
           });
         }
       });
-      // Remove only synced suppliers that were deleted
-      const activeEmails = rows.filter(r=>r.id!=='_company_info').map(r=>r.email);
-      for(let i=PRESET_SUPPLIERS_TEMPLATE.length-1;i>=0;i--){
-        if(PRESET_SUPPLIERS_TEMPLATE[i]._synced && !activeEmails.includes(PRESET_SUPPLIERS_TEMPLATE[i].email)){
-          PRESET_SUPPLIERS_TEMPLATE.splice(i,1);
-        }
-      }
     }
   } catch(e){ console.error('Load suppliers error:', e); }
 }
