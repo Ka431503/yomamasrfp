@@ -1345,17 +1345,17 @@ function switchSettingsTab(tab){
   else if(tab === 'company') renderCompanySettings(el);
 }
 
-function renderCatalogSettings(el, editIdx){
+function renderCatalogSettings(el, editIdx, searchQ){
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" value="'+(catalogQuery||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
 
-  const catalogQuery = (editIdx === undefined) ? (document.getElementById('catalog_search') ? document.getElementById('catalog_search').value.toLowerCase() : '') : '';
+  const catalogQuery = searchQ !== undefined ? searchQ.toLowerCase() : (document.getElementById('catalog_search') ? document.getElementById('catalog_search').value.toLowerCase() : '');
   CATALOG.forEach(function(item, i){
     if(catalogQuery && !item.name.toLowerCase().includes(catalogQuery) && !item.sku.toLowerCase().includes(catalogQuery)) return;
     const isEditing = editIdx === i;
@@ -1372,7 +1372,7 @@ function renderCatalogSettings(el, editIdx){
       html += '<input id="cedit_units" value="' + (item.units||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
-      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),undefined,&quot;' + catalogQuery + '&quot;)" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
       html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
@@ -1381,8 +1381,9 @@ function renderCatalogSettings(el, editIdx){
       html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
       html += '</div>';
-      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-      html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      const realIdx = CATALOG.indexOf(item);
+      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),' + realIdx + ',&quot;' + catalogQuery + '&quot;)" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+      html += '<button onclick="deleteCatalogItem(' + realIdx + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
@@ -1403,18 +1404,18 @@ function saveCatalogEdit(i){
   renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
-function renderSupplierSettings(el, editIdx){
+function renderSupplierSettings(el, editIdx, searchQ){
   const suppliers = PRESET_SUPPLIERS_TEMPLATE;
   let html = '';
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
-  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" value="'+(supplierQuery||'')+'" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
 
-  const supplierQuery = (editIdx === undefined) ? (document.getElementById('supplier_search') ? document.getElementById('supplier_search').value.toLowerCase() : '') : '';
+  const supplierQuery = searchQ !== undefined ? searchQ.toLowerCase() : (document.getElementById('supplier_search') ? document.getElementById('supplier_search').value.toLowerCase() : '');
   suppliers.forEach(function(s, i){
     if(supplierQuery && !s.name.toLowerCase().includes(supplierQuery) && !s.email.toLowerCase().includes(supplierQuery)) return;
     const isEditing = editIdx === i;
@@ -1431,7 +1432,7 @@ function renderSupplierSettings(el, editIdx){
       html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
-      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),undefined,&quot;' + supplierQuery + '&quot;)" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
       html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
@@ -1439,8 +1440,9 @@ function renderSupplierSettings(el, editIdx){
       html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s._custom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
-      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-      html += '<button onclick="deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      const realSupIdx = PRESET_SUPPLIERS_TEMPLATE.indexOf(s);
+      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),' + realSupIdx + ',&quot;' + supplierQuery + '&quot;)" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+      html += '<button onclick="deleteMasterSupplier(' + realSupIdx + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
@@ -1600,16 +1602,17 @@ async function saveCompanySettings(){
 }
 
 function filterCatalog(q){
-  renderCatalogSettings(document.getElementById('settingsContent'));
-  // Restore search value after re-render
-  const el = document.getElementById('catalog_search');
-  if(el){ el.value = q; el.focus(); }
+  const el = document.getElementById('settingsContent');
+  renderCatalogSettings(el, undefined, q);
+  const inp = document.getElementById('catalog_search');
+  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
 }
 
 function filterSuppliers(q){
-  renderSupplierSettings(document.getElementById('settingsContent'));
-  const el = document.getElementById('supplier_search');
-  if(el){ el.value = q; el.focus(); }
+  const el = document.getElementById('settingsContent');
+  renderSupplierSettings(el, undefined, q);
+  const inp = document.getElementById('supplier_search');
+  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
 }
 
 async function saveCatalogAdd(){
