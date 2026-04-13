@@ -1560,6 +1560,109 @@ async function saveSupplierAdd(){
 }
 
 
+// ── COMPANY INFO ─────────────────────────────────────────────
+const DEFAULT_COMPANY = {
+  name: "Yo Mamas Foods",
+  email: "purchasing@yomamasfoods.com",
+  phone: "727-270-4940",
+  website: "www.yomamasfoods.com",
+  address: "Clearwater, Florida",
+  contact1_name: "Katherine Ballesteros",
+  contact1_title: "Manufacturing Coordinator",
+  contact2_name: "Nick Berry",
+  contact2_title: "VP of Manufacturing"
+};
+let companyInfo = Object.assign({}, DEFAULT_COMPANY);
+
+async function loadCompanyInfo(){
+  try {
+    const rows = await supaFetch('/rest/v1/ym_suppliers?id=eq._company_info');
+    if(rows && rows.length && rows[0].other_emails){
+      companyInfo = Object.assign({}, DEFAULT_COMPANY, rows[0].other_emails);
+    }
+  } catch(e){}
+}
+
+async function saveCompanyInfo(){
+  try {
+    await supaFetch('/rest/v1/ym_suppliers', 'POST', {
+      id:'_company_info', name:'_company_info', email:'_company_info',
+      other_emails: companyInfo, sort_order:-1, deleted:false
+    });
+  } catch(e){
+    await supaFetch('/rest/v1/ym_suppliers?id=eq._company_info', 'PATCH', {other_emails: companyInfo});
+  }
+}
+
+function renderCompanySettings(el){
+  const c = companyInfo;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Company Name</label>
+        <input id="ci_name" value="${c.name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Purchasing Email</label>
+        <input id="ci_email" value="${c.email}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Phone</label>
+        <input id="ci_phone" value="${c.phone}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Website</label>
+        <input id="ci_website" value="${c.website}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div style="grid-column:1/-1;">
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Address</label>
+        <input id="ci_address" value="${c.address}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+    </div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-family:monospace;font-size:10px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Contacts (shown in emails)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 1 — Name</label>
+          <input id="ci_c1name" value="${c.contact1_name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 1 — Title</label>
+          <input id="ci_c1title" value="${c.contact1_title}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 2 — Name</label>
+          <input id="ci_c2name" value="${c.contact2_name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 2 — Title</label>
+          <input id="ci_c2title" value="${c.contact2_title}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:18px;">
+      <button onclick="saveCompanySettings()" style="font-family:monospace;font-size:12px;padding:10px 24px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;">✓ Save Company Info</button>
+    </div>
+  `;
+}
+
+async function saveCompanySettings(){
+  companyInfo = {
+    name: document.getElementById('ci_name').value.trim(),
+    email: document.getElementById('ci_email').value.trim(),
+    phone: document.getElementById('ci_phone').value.trim(),
+    website: document.getElementById('ci_website').value.trim(),
+    address: document.getElementById('ci_address').value.trim(),
+    contact1_name: document.getElementById('ci_c1name').value.trim(),
+    contact1_title: document.getElementById('ci_c1title').value.trim(),
+    contact2_name: document.getElementById('ci_c2name').value.trim(),
+    contact2_title: document.getElementById('ci_c2title').value.trim(),
+  };
+  await saveCompanyInfo();
+  const btn = document.querySelector('#settingsContent button');
+  if(btn){ btn.textContent='✓ Saved!'; btn.style.background='var(--green)'; setTimeout(()=>{btn.textContent='✓ Save Company Info';btn.style.background='var(--navy)';},2000); }
+}
+
 function filterCatalog(q){
   _catalogSearchQ = q;
   const el = document.getElementById('settingsContent');
