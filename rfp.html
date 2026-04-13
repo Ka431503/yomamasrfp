@@ -1109,7 +1109,7 @@ async function sendRFP(supId){
           attachList.push('      📎 ' + att.name + ' (available in the quote form link above)');
         }
       }
-      if(attachList.length) attachLinks = '\n      Spec Sheet(s):\n' + attachList.join('\n');
+      if(attachList.length) attachLinks = '\n      Spec Sheet(s): ' + attachList.map(a => a.split('\n')[0].replace('      📎 ', '')).join(', ') + '\n      (Download available in the quote form link above)';
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
