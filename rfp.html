@@ -1359,9 +1359,8 @@ function renderCatalogSettings(el, editIdx){
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
-  var qLow = q.toLowerCase();
   CATALOG.forEach(function(item, i){
-    if(qLow && !item.name.toLowerCase().includes(qLow) && !(item.sku||'').toLowerCase().includes(qLow)) return;
+    // filtering handled by filterCatalog()
     if(editIdx === i){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + item.name + '</div>';
@@ -1378,11 +1377,12 @@ function renderCatalogSettings(el, editIdx){
       html += '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div onclick="catalogRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div class="cat-row" data-name="' + item.name + '" data-sku="' + (item.sku||'') + '" onclick="catalogRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
       html += '<div style="flex:1;">';
       html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + (item.sku||'') + ' · ' + (item.units||[]).join(', ') + '</div>';
       html += '</div>';
+      html += '<button onclick="event.stopPropagation();catalogRowClick(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
       html += '<button onclick="event.stopPropagation();deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
@@ -1437,9 +1437,8 @@ function renderSupplierSettings(el, editIdx){
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
-  var qLow = q.toLowerCase();
   suppliers.forEach(function(s, i){
-    if(qLow && !s.name.toLowerCase().includes(qLow) && !s.email.toLowerCase().includes(qLow)) return;
+    // filtering handled by filterSuppliers()
     if(editIdx === i){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + s.name + '</div>';
@@ -1456,11 +1455,12 @@ function renderSupplierSettings(el, editIdx){
       html += '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div onclick="supplierRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div class="sup-row" data-name="' + s.name + '" data-email="' + s.email + '" onclick="supplierRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
       html += '<div style="flex:1;">';
       html += '<div style="font-weight:600;font-size:13px;">' + s.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
+      html += '<button onclick="event.stopPropagation();supplierRowClick(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
       html += '<button onclick="event.stopPropagation();deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
