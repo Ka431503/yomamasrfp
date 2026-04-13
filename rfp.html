@@ -1101,7 +1101,7 @@ async function sendRFP(supId){
                 let url = signData.signedURL.startsWith('http') ? signData.signedURL : 
                           signData.signedURL.startsWith('/storage') ? SUPA_URL + signData.signedURL :
                           SUPA_URL + '/storage/v1' + signData.signedURL;
-                attachList.push('      📎 ' + att.name + '\n         ' + url);
+                attachList.push('      📎 ' + att.name);
               }
             }
           } catch(e) { attachList.push('      📎 ' + att.name); }
