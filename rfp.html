@@ -371,6 +371,7 @@ select.rmc-input{cursor:pointer;}
     <button class="tbtn" onclick="openSupPickerModal()">+ Supplier</button>
     <button id="gmailBtn" class="tbtn" onclick="isGmailConnected()?null:connectGmail()">📧 Connect Gmail</button>
     <button class="tbtn" onclick="showArchive()" style="border-color:var(--gold);color:var(--gold);">📦 Archive</button>
+    <button class="tbtn" onclick="showSettings()" style="border-color:rgba(255,255,255,.35);">⚙️ Settings</button>
     <button class="tbtn ac" onclick="exportTxt()">↓ Export</button>
   </div>
 </div>
@@ -390,6 +391,22 @@ select.rmc-input{cursor:pointer;}
     <button class="btn cancel" onclick="closeAll()">Cancel</button>
     <button class="btn ok" onclick="confirmPicker()">Add Selected →</button>
   </div>
+</div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="ov" id="settingsOv">
+<div class="modal" style="width:820px;max-height:90vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">⚙️ Settings</h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+  <!-- Tabs -->
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+    <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
+    <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
+  </div>
+  <div id="settingsContent" style="max-height:65vh;overflow-y:auto;"></div>
 </div>
 </div>
 
@@ -423,6 +440,22 @@ select.rmc-input{cursor:pointer;}
     <button class="btn cancel" onclick="closeAll()">Cancel</button>
     <button class="btn ok" onclick="confirmNewProject()">Create Project</button>
   </div>
+</div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="ov" id="settingsOv">
+<div class="modal" style="width:820px;max-height:90vh;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;">⚙️ Settings</h2>
+    <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
+  </div>
+  <!-- Tabs -->
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+    <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
+    <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
+  </div>
+  <div id="settingsContent" style="max-height:65vh;overflow-y:auto;"></div>
 </div>
 </div>
 
@@ -1109,14 +1142,14 @@ async function sendRFP(supId){
           attachList.push('      📎 ' + att.name + ' (available in the quote form link above)');
         }
       }
-      if(attachList.length) attachLinks = '\n      Spec Sheet(s): ' + attachList.map(a => a.split('\n')[0].replace('      📎 ', '')).join(', ') + '\n      (Download available in the quote form link above)';
+      if(attachList.length) attachLinks = '\n\n      ► SPEC SHEET(S) — open quote form link to download:\n' + attachList.map(a => '        -> ' + a.replace('      📎 ', '')).join('\n');
     }
     return `  ${String(i+1).padStart(2,'0')}. ${name}${cat&&cat.sku?' ('+cat.sku+')':''}
       Estimated Volume: ${qty}
       Delivery Location: ${delivery}${packaging?' | Packaging: '+packaging:''}${specs?' | Specs: '+specs:''}${attachLinks}`;
   }))).join('\n\n');
 
-  const subject = `Yo Mamas Foods - ${rfpNum} | ${state.rfpName ? state.rfpName + ' — ' : ''}Quote Request`;
+  const subject = `Yo Mamas Foods - ${rfpNum} | ${state.rfpName ? state.rfpName + ' - ' : ''}Quote Request`;
 
   const body =
 `Dear ${sup.contact||sup.name},
@@ -1289,6 +1322,178 @@ async function deleteArchiveRecord(id){
   await supaFetch('/rest/v1/rfp_archive?id=eq.'+id, 'DELETE');
   // Reload archive
   showArchive();
+}
+
+function showSettings(){
+  document.getElementById('settingsOv').classList.add('open');
+  switchSettingsTab('catalog');
+}
+
+function switchSettingsTab(tab){
+  // Update tab styles
+  document.getElementById('stab_catalog').style.borderBottomColor = tab==='catalog'?'var(--navy)':'transparent';
+  document.getElementById('stab_catalog').style.color = tab==='catalog'?'var(--navy)':'var(--muted)';
+  document.getElementById('stab_catalog').style.fontWeight = tab==='catalog'?'600':'400';
+  document.getElementById('stab_suppliers').style.borderBottomColor = tab==='suppliers'?'var(--navy)':'transparent';
+  document.getElementById('stab_suppliers').style.color = tab==='suppliers'?'var(--navy)':'var(--muted)';
+  document.getElementById('stab_suppliers').style.fontWeight = tab==='suppliers'?'600':'400';
+
+  const el = document.getElementById('settingsContent');
+  if(tab === 'catalog') renderCatalogSettings(el);
+  else renderSupplierSettings(el);
+}
+
+function renderCatalogSettings(el){
+  let html = '';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
+  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + CATALOG.length + ' items in catalog</div>';
+  html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Item</button>';
+  html += '</div>';
+
+  CATALOG.forEach(function(item, i){
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
+    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">' + (i+1) + '</div>';
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
+    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
+    html += '</div>';
+    html += '<button onclick="editCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+    html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function renderSupplierSettings(el){
+  const suppliers = PRESET_SUPPLIERS_TEMPLATE;
+  let html = '';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
+  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + suppliers.length + ' suppliers in master list</div>';
+  html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Supplier</button>';
+  html += '</div>';
+
+  suppliers.forEach(function(s, i){
+    const isCustom = s._custom;
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
+    html += '<div style="flex:1;min-width:0;">';
+    html += '<div style="font-weight:600;font-size:13px;">' + s.name + (isCustom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
+    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
+    html += '</div>';
+    html += '<button onclick="editMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+    if(isCustom){
+      html += '<button onclick="deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+    }
+    html += '</div>';
+  });
+
+  el.innerHTML = html;
+}
+
+function addCatalogItem(){
+  const name = prompt('Item name:');
+  if(!name) return;
+  const sku = prompt('SKU (e.g. JAR-32L):') || '';
+  const units = prompt('Units (comma separated, e.g. Units,Case,Pallet):') || 'Units';
+  CATALOG.push({
+    id: 'custom_' + Date.now(),
+    name: name.trim(),
+    sku: sku.trim(),
+    units: units.split(',').map(u=>u.trim()),
+    cat: 'other',
+    _custom: true
+  });
+  saveCatalogToStorage();
+  switchSettingsTab('catalog');
+}
+
+function editCatalogItem(i){
+  const item = CATALOG[i];
+  const name = prompt('Item name:', item.name);
+  if(name === null) return;
+  const sku = prompt('SKU:', item.sku);
+  if(sku === null) return;
+  const units = prompt('Units (comma separated):', (item.units||[]).join(','));
+  if(units === null) return;
+  CATALOG[i].name = name.trim();
+  CATALOG[i].sku = sku.trim();
+  CATALOG[i].units = units.split(',').map(u=>u.trim());
+  CATALOG[i]._custom = true;
+  saveCatalogToStorage();
+  switchSettingsTab('catalog');
+}
+
+function deleteCatalogItem(i){
+  if(!confirm('Delete "' + CATALOG[i].name + '" from catalog?')) return;
+  CATALOG.splice(i, 1);
+  saveCatalogToStorage();
+  switchSettingsTab('catalog');
+}
+
+function saveCatalogToStorage(){
+  try {
+    const custom = CATALOG.filter(c=>c._custom);
+    localStorage.setItem('ym_custom_catalog', JSON.stringify(custom));
+    // Save deleted IDs
+    const allIds = CATALOG.map(c=>c.id);
+    localStorage.setItem('ym_catalog_ids', JSON.stringify(allIds));
+  } catch(e){}
+}
+
+function loadCatalogFromStorage(){
+  try {
+    // Load custom items
+    const custom = JSON.parse(localStorage.getItem('ym_custom_catalog')||'[]');
+    custom.forEach(c => {
+      if(!CATALOG.find(x=>x.id===c.id)) CATALOG.push(c);
+    });
+    // Remove deleted items
+    const ids = JSON.parse(localStorage.getItem('ym_catalog_ids')||'null');
+    if(ids) {
+      for(let i=CATALOG.length-1;i>=0;i--){
+        if(!ids.includes(CATALOG[i].id)) CATALOG.splice(i,1);
+      }
+    }
+  } catch(e){}
+}
+
+function addMasterSupplier(){
+  const name = prompt('Supplier name:');
+  if(!name) return;
+  const email = prompt('Primary email:') || '';
+  const otherEmails = prompt('Additional emails (comma separated, optional):') || '';
+  const newSup = {
+    name: name.trim(),
+    email: email.trim(),
+    otherEmails: otherEmails ? otherEmails.split(',').map(e=>e.trim()).filter(e=>e) : [],
+    _custom: true
+  };
+  PRESET_SUPPLIERS_TEMPLATE.push(newSup);
+  saveCustomSuppliers();
+  switchSettingsTab('suppliers');
+}
+
+function editMasterSupplier(i){
+  const s = PRESET_SUPPLIERS_TEMPLATE[i];
+  const name = prompt('Supplier name:', s.name);
+  if(name === null) return;
+  const email = prompt('Primary email:', s.email);
+  if(email === null) return;
+  const otherEmails = prompt('Additional emails:', (s.otherEmails||[]).join(','));
+  if(otherEmails === null) return;
+  PRESET_SUPPLIERS_TEMPLATE[i].name = name.trim();
+  PRESET_SUPPLIERS_TEMPLATE[i].email = email.trim();
+  PRESET_SUPPLIERS_TEMPLATE[i].otherEmails = otherEmails ? otherEmails.split(',').map(e=>e.trim()).filter(e=>e) : [];
+  PRESET_SUPPLIERS_TEMPLATE[i]._custom = true;
+  saveCustomSuppliers();
+  switchSettingsTab('suppliers');
+}
+
+function deleteMasterSupplier(i){
+  if(!confirm('Remove "' + PRESET_SUPPLIERS_TEMPLATE[i].name + '" from master list?')) return;
+  PRESET_SUPPLIERS_TEMPLATE.splice(i, 1);
+  saveCustomSuppliers();
+  switchSettingsTab('suppliers');
 }
 
 function copyEmailBody(){
@@ -2527,6 +2732,7 @@ window.addEventListener('load',()=>{
   if(urlParams.get('gmail_connected')) {
     window.history.replaceState({}, '', './rfp.html');
   }
+  loadCatalogFromStorage();
   loadCustomSuppliers();
   loadProjects();
   render();
