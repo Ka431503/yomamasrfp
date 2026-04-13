@@ -1391,6 +1391,9 @@ function renderCatalogSettings(el, editIdx){
   if(editIdx !== undefined){
     var inp = document.getElementById('cedit_name');
     if(inp) inp.focus();
+  } else {
+    var srch = document.getElementById('cat_srch');
+    if(srch){ srch.focus(); var l=(_catalogSearchQ||'').length; srch.setSelectionRange(l,l); }
   }
 }
 
@@ -1466,6 +1469,9 @@ function renderSupplierSettings(el, editIdx){
   if(editIdx !== undefined){
     var inp = document.getElementById('sedit_name');
     if(inp) inp.focus();
+  } else {
+    var srch = document.getElementById('sup_srch');
+    if(srch){ srch.focus(); var l=(_supplierSearchQ||'').length; srch.setSelectionRange(l,l); }
   }
 }
 
