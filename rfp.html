@@ -1343,7 +1343,7 @@ function switchSettingsTab(tab){
   else renderSupplierSettings(el);
 }
 
-function renderCatalogSettings(el){
+function renderCatalogSettings(el, editIdx){
   let html = '';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
   html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + CATALOG.length + ' items in catalog</div>';
@@ -1351,21 +1351,52 @@ function renderCatalogSettings(el){
   html += '</div>';
 
   CATALOG.forEach(function(item, i){
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
-    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);width:40px;flex-shrink:0;">' + (i+1) + '</div>';
-    html += '<div style="flex:1;min-width:0;">';
-    html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
-    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
-    html += '</div>';
-    html += '<button onclick="editCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-    html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
-    html += '</div>';
+    const isEditing = editIdx === i;
+    if(isEditing){
+      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Editing Item</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name</label>';
+      html += '<input id="cedit_name" value="' + item.name + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">SKU</label>';
+      html += '<input id="cedit_sku" value="' + item.sku + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '</div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Units (comma separated)</label>';
+      html += '<input id="cedit_units" value="' + (item.units||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div style="display:flex;gap:8px;">';
+      html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
+      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '</div></div>';
+    } else {
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);width:30px;flex-shrink:0;">' + (i+1) + '</div>';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
+      html += '</div>';
+      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
+      html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '</div>';
+    }
   });
 
   el.innerHTML = html;
 }
 
-function renderSupplierSettings(el){
+function saveCatalogEdit(i){
+  const name = document.getElementById('cedit_name').value.trim();
+  const sku = document.getElementById('cedit_sku').value.trim();
+  const units = document.getElementById('cedit_units').value.split(',').map(u=>u.trim()).filter(u=>u);
+  if(!name){ alert('Name is required.'); return; }
+  CATALOG[i].name = name;
+  CATALOG[i].sku = sku;
+  CATALOG[i].units = units;
+  CATALOG[i]._custom = true;
+  saveCatalogToStorage();
+  renderCatalogSettings(document.getElementById('settingsContent'));
+}
+
+function renderSupplierSettings(el, editIdx){
   const suppliers = PRESET_SUPPLIERS_TEMPLATE;
   let html = '';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
@@ -1374,20 +1405,48 @@ function renderSupplierSettings(el){
   html += '</div>';
 
   suppliers.forEach(function(s, i){
-    const isCustom = s._custom;
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
-    html += '<div style="flex:1;min-width:0;">';
-    html += '<div style="font-weight:600;font-size:13px;">' + s.name + (isCustom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
-    html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
-    html += '</div>';
-    html += '<button onclick="editMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-    if(isCustom){
+    const isEditing = editIdx === i;
+    if(isEditing){
+      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Editing Supplier</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name</label>';
+      html += '<input id="sedit_name" value="' + s.name + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Primary Email</label>';
+      html += '<input id="sedit_email" value="' + s.email + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '</div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated)</label>';
+      html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div style="display:flex;gap:8px;">';
+      html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
+      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '</div></div>';
+    } else {
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
+      html += '<div style="flex:1;min-width:0;">';
+      html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s._custom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
+      html += '</div>';
+      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
       html += '<button onclick="deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '</div>';
     }
-    html += '</div>';
   });
 
   el.innerHTML = html;
+}
+
+function saveSupplierEdit(i){
+  const name = document.getElementById('sedit_name').value.trim();
+  const email = document.getElementById('sedit_email').value.trim();
+  const others = document.getElementById('sedit_others').value.split(',').map(e=>e.trim()).filter(e=>e);
+  if(!name){ alert('Name is required.'); return; }
+  PRESET_SUPPLIERS_TEMPLATE[i].name = name;
+  PRESET_SUPPLIERS_TEMPLATE[i].email = email;
+  PRESET_SUPPLIERS_TEMPLATE[i].otherEmails = others;
+  PRESET_SUPPLIERS_TEMPLATE[i]._custom = true;
+  saveCustomSuppliers();
+  renderSupplierSettings(document.getElementById('settingsContent'));
 }
 
 function addCatalogItem(){
@@ -1407,21 +1466,7 @@ function addCatalogItem(){
   switchSettingsTab('catalog');
 }
 
-function editCatalogItem(i){
-  const item = CATALOG[i];
-  const name = prompt('Item name:', item.name);
-  if(name === null) return;
-  const sku = prompt('SKU:', item.sku);
-  if(sku === null) return;
-  const units = prompt('Units (comma separated):', (item.units||[]).join(','));
-  if(units === null) return;
-  CATALOG[i].name = name.trim();
-  CATALOG[i].sku = sku.trim();
-  CATALOG[i].units = units.split(',').map(u=>u.trim());
-  CATALOG[i]._custom = true;
-  saveCatalogToStorage();
-  switchSettingsTab('catalog');
-}
+
 
 function deleteCatalogItem(i){
   if(!confirm('Delete "' + CATALOG[i].name + '" from catalog?')) return;
@@ -1473,21 +1518,7 @@ function addMasterSupplier(){
   switchSettingsTab('suppliers');
 }
 
-function editMasterSupplier(i){
-  const s = PRESET_SUPPLIERS_TEMPLATE[i];
-  const name = prompt('Supplier name:', s.name);
-  if(name === null) return;
-  const email = prompt('Primary email:', s.email);
-  if(email === null) return;
-  const otherEmails = prompt('Additional emails:', (s.otherEmails||[]).join(','));
-  if(otherEmails === null) return;
-  PRESET_SUPPLIERS_TEMPLATE[i].name = name.trim();
-  PRESET_SUPPLIERS_TEMPLATE[i].email = email.trim();
-  PRESET_SUPPLIERS_TEMPLATE[i].otherEmails = otherEmails ? otherEmails.split(',').map(e=>e.trim()).filter(e=>e) : [];
-  PRESET_SUPPLIERS_TEMPLATE[i]._custom = true;
-  saveCustomSuppliers();
-  switchSettingsTab('suppliers');
-}
+
 
 function deleteMasterSupplier(i){
   if(!confirm('Remove "' + PRESET_SUPPLIERS_TEMPLATE[i].name + '" from master list?')) return;
