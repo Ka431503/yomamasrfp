@@ -1699,33 +1699,30 @@ async function loadCatalogFromStorage(){
   try {
     const rows = await supaFetch('/rest/v1/ym_catalog?deleted=eq.false&order=sort_order.asc');
     if(rows && rows.length){
-      // Merge: update existing items, add new ones
       rows.forEach(row => {
         const existing = CATALOG.findIndex(c=>c.id===row.id);
         if(existing >= 0){
+          // Update existing item name/sku/units from Supabase
           CATALOG[existing].name = row.name;
           CATALOG[existing].sku = row.sku;
-          CATALOG[existing].units = row.units || CATALOG[existing].units;
+          if(row.units && row.units.length) CATALOG[existing].units = row.units;
+          CATALOG[existing]._synced = true;
         } else {
+          // Add custom item that only exists in Supabase
           CATALOG.push({
-            id: row.id, name: row.name, sku: row.sku,
-            units: row.units || ['Units'], cat: row.cat || 'other', _custom: true
+            id: row.id, name: row.name, sku: row.sku||'',
+            units: row.units || ['Units'], cat: row.cat || 'other',
+            _custom: true, _synced: true
           });
         }
       });
-      // Remove items marked deleted in Supabase
+      // Remove only items that were previously synced but now deleted in Supabase
       const activeIds = rows.map(r=>r.id);
       for(let i=CATALOG.length-1;i>=0;i--){
-        // Only remove if it was a synced item (exists in Supabase) but now deleted
         if(CATALOG[i]._synced && !activeIds.includes(CATALOG[i].id)){
           CATALOG.splice(i,1);
         }
       }
-      // Mark all loaded items as synced
-      rows.forEach(row => {
-        const item = CATALOG.find(c=>c.id===row.id);
-        if(item) item._synced = true;
-      });
     }
   } catch(e){ console.error('Load catalog error:', e); }
 }
@@ -2906,6 +2903,7 @@ async function loadCustomSuppliers(){
     const rows = await supaFetch('/rest/v1/ym_suppliers?deleted=eq.false&order=sort_order.asc');
     if(rows && rows.length){
       rows.forEach(row => {
+        if(row.id === '_company_info') return; // skip company info row
         const existing = PRESET_SUPPLIERS_TEMPLATE.findIndex(s=>s.email===row.email);
         if(existing >= 0){
           PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
@@ -2918,6 +2916,13 @@ async function loadCustomSuppliers(){
           });
         }
       });
+      // Remove only synced suppliers that were deleted
+      const activeEmails = rows.filter(r=>r.id!=='_company_info').map(r=>r.email);
+      for(let i=PRESET_SUPPLIERS_TEMPLATE.length-1;i>=0;i--){
+        if(PRESET_SUPPLIERS_TEMPLATE[i]._synced && !activeEmails.includes(PRESET_SUPPLIERS_TEMPLATE[i].email)){
+          PRESET_SUPPLIERS_TEMPLATE.splice(i,1);
+        }
+      }
     }
   } catch(e){ console.error('Load suppliers error:', e); }
 }
