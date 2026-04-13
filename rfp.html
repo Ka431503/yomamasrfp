@@ -402,7 +402,8 @@ select.rmc-input{cursor:pointer;}
     <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
   </div>
   <!-- Tabs -->
-  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;flex-wrap:wrap;">
+    <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
   </div>
@@ -451,7 +452,8 @@ select.rmc-input{cursor:pointer;}
     <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
   </div>
   <!-- Tabs -->
-  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;flex-wrap:wrap;">
+    <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
   </div>
@@ -1208,18 +1210,18 @@ Subject: RFP Response - ${rfpNum} [${sup.name}]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 6. CONTACT INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Katherine Ballesteros, Manufacturing Coordinator
-Nick Berry, VP of Manufacturing
-Email: purchasing@yomamasfoods.com
-Phone: 727-270-4940
+\${companyInfo.contact1_name}, \${companyInfo.contact1_title}
+\${companyInfo.contact2_name}, \${companyInfo.contact2_title}
+Email: \${companyInfo.email}
+Phone: \${companyInfo.phone}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Thank you for your time. We look forward to reviewing your proposal.
 
 Warm regards,
-Purchasing Department | Yo Mamas Foods Co.
-purchasing@yomamasfoods.com | www.yomamasfoods.com`;
+Purchasing Department | \${companyInfo.name}
+\${companyInfo.email} | \${companyInfo.website}`;
 
   const cc = (sup.otherEmails||[]).join(',');
 
@@ -1330,27 +1332,32 @@ function showSettings(){
 }
 
 function switchSettingsTab(tab){
-  // Update tab styles
-  document.getElementById('stab_catalog').style.borderBottomColor = tab==='catalog'?'var(--navy)':'transparent';
-  document.getElementById('stab_catalog').style.color = tab==='catalog'?'var(--navy)':'var(--muted)';
-  document.getElementById('stab_catalog').style.fontWeight = tab==='catalog'?'600':'400';
-  document.getElementById('stab_suppliers').style.borderBottomColor = tab==='suppliers'?'var(--navy)':'transparent';
-  document.getElementById('stab_suppliers').style.color = tab==='suppliers'?'var(--navy)':'var(--muted)';
-  document.getElementById('stab_suppliers').style.fontWeight = tab==='suppliers'?'600':'400';
-
+  ['company','catalog','suppliers'].forEach(t => {
+    const btn = document.getElementById('stab_'+t);
+    if(!btn) return;
+    btn.style.borderBottomColor = tab===t?'var(--navy)':'transparent';
+    btn.style.color = tab===t?'var(--navy)':'var(--muted)';
+    btn.style.fontWeight = tab===t?'600':'400';
+  });
   const el = document.getElementById('settingsContent');
   if(tab === 'catalog') renderCatalogSettings(el);
-  else renderSupplierSettings(el);
+  else if(tab === 'suppliers') renderSupplierSettings(el);
+  else if(tab === 'company') renderCompanySettings(el);
 }
 
 function renderCatalogSettings(el, editIdx){
   let html = '';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
-  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + CATALOG.length + ' items in catalog</div>';
-  html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Item</button>';
+  html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
+  html += '<div style="flex:1;position:relative;">';
+  html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
+  html += '<input id="catalog_search" placeholder="Search items..." oninput="filterCatalog(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '</div>';
+  html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
 
+  const catalogQuery = (editIdx === undefined) ? (document.getElementById('catalog_search') ? document.getElementById('catalog_search').value.toLowerCase() : '') : '';
   CATALOG.forEach(function(item, i){
+    if(catalogQuery && !item.name.toLowerCase().includes(catalogQuery) && !item.sku.toLowerCase().includes(catalogQuery)) return;
     const isEditing = editIdx === i;
     if(isEditing){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
@@ -1399,12 +1406,17 @@ function saveCatalogEdit(i){
 function renderSupplierSettings(el, editIdx){
   const suppliers = PRESET_SUPPLIERS_TEMPLATE;
   let html = '';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
-  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + suppliers.length + ' suppliers in master list</div>';
-  html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Supplier</button>';
+  html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
+  html += '<div style="flex:1;position:relative;">';
+  html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;">🔍</span>';
+  html += '<input id="supplier_search" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '</div>';
+  html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
 
+  const supplierQuery = (editIdx === undefined) ? (document.getElementById('supplier_search') ? document.getElementById('supplier_search').value.toLowerCase() : '') : '';
   suppliers.forEach(function(s, i){
+    if(supplierQuery && !s.name.toLowerCase().includes(supplierQuery) && !s.email.toLowerCase().includes(supplierQuery)) return;
     const isEditing = editIdx === i;
     if(isEditing){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
@@ -1450,20 +1462,172 @@ function saveSupplierEdit(i){
 }
 
 function addCatalogItem(){
-  const name = prompt('Item name:');
-  if(!name) return;
-  const sku = prompt('SKU (e.g. JAR-32L):') || '';
-  const units = prompt('Units (comma separated, e.g. Units,Case,Pallet):') || 'Units';
-  CATALOG.push({
+  const el = document.getElementById('settingsContent');
+  // Show inline add form at top
+  const addForm = document.createElement('div');
+  addForm.id = 'catalog_add_form';
+  addForm.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  addForm.innerHTML = `
+    <div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">New Catalog Item</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name *</label>
+      <input id="cadd_name" placeholder="e.g. Jar, 32oz Lug" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">SKU</label>
+      <input id="cadd_sku" placeholder="e.g. JAR-32L" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    </div>
+    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Units (comma separated)</label>
+    <input id="cadd_units" placeholder="e.g. Units, Case, Pallet, LB" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveCatalogAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Item</button>
+      <button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
+    </div>`;
+  el.insertBefore(addForm, el.firstChild);
+  document.getElementById('cadd_name').focus();
+}
+
+// Default company info
+const DEFAULT_COMPANY = {
+  name: "Yo Mamas Foods",
+  email: "purchasing@yomamasfoods.com",
+  phone: "727-270-4940",
+  website: "www.yomamasfoods.com",
+  address: "Clearwater, Florida",
+  contact1_name: "Katherine Ballesteros",
+  contact1_title: "Manufacturing Coordinator",
+  contact2_name: "Nick Berry",
+  contact2_title: "VP of Manufacturing"
+};
+let companyInfo = Object.assign({}, DEFAULT_COMPANY);
+
+async function loadCompanyInfo(){
+  try {
+    const rows = await supaFetch('/rest/v1/ym_suppliers?id=eq._company_info');
+    if(rows && rows.length && rows[0].other_emails){
+      const saved = rows[0].other_emails;
+      if(typeof saved === 'object') companyInfo = Object.assign({}, DEFAULT_COMPANY, saved);
+    }
+  } catch(e){}
+}
+
+async function saveCompanyInfo(){
+  const data = {
+    id: '_company_info',
+    name: '_company_info',
+    email: '_company_info',
+    other_emails: companyInfo,
+    sort_order: -1,
+    deleted: false
+  };
+  try {
+    await supaFetch('/rest/v1/ym_suppliers', 'POST', data);
+  } catch(e){
+    await supaFetch('/rest/v1/ym_suppliers?id=eq._company_info', 'PATCH', {other_emails: companyInfo});
+  }
+}
+
+function renderCompanySettings(el){
+  const c = companyInfo;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Company Name</label>
+        <input id="ci_name" value="${c.name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Purchasing Email</label>
+        <input id="ci_email" value="${c.email}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Phone</label>
+        <input id="ci_phone" value="${c.phone}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div>
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Website</label>
+        <input id="ci_website" value="${c.website}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+      <div style="grid-column:1/-1;">
+        <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px;">Address / Location</label>
+        <input id="ci_address" value="${c.address}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-family:monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;">Contacts (shown in emails)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 1 — Name</label>
+          <input id="ci_c1name" value="${c.contact1_name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 1 — Title</label>
+          <input id="ci_c1title" value="${c.contact1_title}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 2 — Name</label>
+          <input id="ci_c2name" value="${c.contact2_name}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+        <div>
+          <label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Contact 2 — Title</label>
+          <input id="ci_c2title" value="${c.contact2_title}" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <button onclick="saveCompanySettings()" style="font-family:monospace;font-size:12px;padding:10px 24px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;">✓ Save Company Info</button>
+    </div>
+  `;
+}
+
+async function saveCompanySettings(){
+  companyInfo = {
+    name: document.getElementById('ci_name').value.trim(),
+    email: document.getElementById('ci_email').value.trim(),
+    phone: document.getElementById('ci_phone').value.trim(),
+    website: document.getElementById('ci_website').value.trim(),
+    address: document.getElementById('ci_address').value.trim(),
+    contact1_name: document.getElementById('ci_c1name').value.trim(),
+    contact1_title: document.getElementById('ci_c1title').value.trim(),
+    contact2_name: document.getElementById('ci_c2name').value.trim(),
+    contact2_title: document.getElementById('ci_c2title').value.trim(),
+  };
+  await saveCompanyInfo();
+  // Show confirmation
+  const btn = document.querySelector('#settingsContent button');
+  const orig = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = '✓ Saved!'; btn.style.background='var(--green)'; }
+  setTimeout(()=>{ if(btn){ btn.textContent=orig; btn.style.background='var(--navy)'; }}, 2000);
+}
+
+function filterCatalog(q){
+  renderCatalogSettings(document.getElementById('settingsContent'));
+  // Restore search value after re-render
+  const el = document.getElementById('catalog_search');
+  if(el){ el.value = q; el.focus(); }
+}
+
+function filterSuppliers(q){
+  renderSupplierSettings(document.getElementById('settingsContent'));
+  const el = document.getElementById('supplier_search');
+  if(el){ el.value = q; el.focus(); }
+}
+
+async function saveCatalogAdd(){
+  const name = document.getElementById('cadd_name').value.trim();
+  const sku = document.getElementById('cadd_sku').value.trim();
+  const units = document.getElementById('cadd_units').value.split(',').map(u=>u.trim()).filter(u=>u);
+  if(!name){ alert('Name is required.'); return; }
+  const newItem = {
     id: 'custom_' + Date.now(),
-    name: name.trim(),
-    sku: sku.trim(),
-    units: units.split(',').map(u=>u.trim()),
+    name: name,
+    sku: sku,
+    units: units.length ? units : ['Units'],
     cat: 'other',
     _custom: true
-  });
-  saveCatalogToStorage();
-  switchSettingsTab('catalog');
+  };
+  CATALOG.push(newItem);
+  await saveCatalogToStorage();
+  renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
 
@@ -1545,19 +1709,39 @@ async function loadCatalogFromStorage(){
 }
 
 function addMasterSupplier(){
-  const name = prompt('Supplier name:');
-  if(!name) return;
-  const email = prompt('Primary email:') || '';
-  const otherEmails = prompt('Additional emails (comma separated, optional):') || '';
-  const newSup = {
-    name: name.trim(),
-    email: email.trim(),
-    otherEmails: otherEmails ? otherEmails.split(',').map(e=>e.trim()).filter(e=>e) : [],
-    _custom: true
-  };
-  PRESET_SUPPLIERS_TEMPLATE.push(newSup);
-  saveCustomSuppliers();
-  switchSettingsTab('suppliers');
+  const el = document.getElementById('settingsContent');
+  const addForm = document.createElement('div');
+  addForm.id = 'supplier_add_form';
+  addForm.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  addForm.innerHTML = `
+    <div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">New Supplier</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name *</label>
+      <input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Primary Email *</label>
+      <input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    </div>
+    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated, optional)</label>
+    <input id="sadd_others" placeholder="e.g. support@acme.com, quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Supplier</button>
+      <button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
+    </div>`;
+  el.insertBefore(addForm, el.firstChild);
+  document.getElementById('sadd_name').focus();
+}
+
+async function saveSupplierAdd(){
+  const name = document.getElementById('sadd_name').value.trim();
+  const email = document.getElementById('sadd_email').value.trim();
+  const others = document.getElementById('sadd_others').value.split(',').map(e=>e.trim()).filter(e=>e);
+  if(!name){ alert('Name is required.'); return; }
+  if(!email){ alert('Email is required.'); return; }
+  PRESET_SUPPLIERS_TEMPLATE.push({
+    name: name, email: email, otherEmails: others, _custom: true
+  });
+  await saveCustomSuppliers();
+  renderSupplierSettings(document.getElementById('settingsContent'));
 }
 
 
@@ -2834,7 +3018,7 @@ window.addEventListener('load',()=>{
   if(urlParams.get('gmail_connected')) {
     window.history.replaceState({}, '', './rfp.html');
   }
-  Promise.all([loadCatalogFromStorage(), loadCustomSuppliers()]).then(()=>{
+  Promise.all([loadCatalogFromStorage(), loadCustomSuppliers(), loadCompanyInfo()]).then(()=>{
     loadProjects();
     render();
   });
