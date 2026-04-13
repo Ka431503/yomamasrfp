@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- SETTINGS-V8 -->
 <!-- VERSION: 2026-03-31-v5 -->
 <html lang="en">
 <head>
@@ -402,7 +403,8 @@ select.rmc-input{cursor:pointer;}
     <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
   </div>
   <!-- Tabs -->
-  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;flex-wrap:wrap;">
+    <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
   </div>
@@ -451,7 +453,8 @@ select.rmc-input{cursor:pointer;}
     <button onclick="closeAll()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);">✕</button>
   </div>
   <!-- Tabs -->
-  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;">
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:18px;flex-wrap:wrap;">
+    <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
   </div>
@@ -1208,18 +1211,18 @@ Subject: RFP Response - ${rfpNum} [${sup.name}]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 6. CONTACT INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Katherine Ballesteros, Manufacturing Coordinator
-Nick Berry, VP of Manufacturing
-Email: purchasing@yomamasfoods.com
-Phone: 727-270-4940
+\${companyInfo.contact1_name}, \${companyInfo.contact1_title}
+\${companyInfo.contact2_name}, \${companyInfo.contact2_title}
+Email: \${companyInfo.email}
+Phone: \${companyInfo.phone}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Thank you for your time. We look forward to reviewing your proposal.
 
 Warm regards,
-Purchasing Department | Yo Mamas Foods Co.
-purchasing@yomamasfoods.com | www.yomamasfoods.com`;
+Purchasing Department | \${companyInfo.name}
+\${companyInfo.email} | \${companyInfo.website}`;
 
   const cc = (sup.otherEmails||[]).join(',');
 
@@ -1325,121 +1328,151 @@ async function deleteArchiveRecord(id){
 }
 
 function showSettings(){
+  _catalogSearchQ = '';
+  _supplierSearchQ = '';
   document.getElementById('settingsOv').classList.add('open');
   switchSettingsTab('catalog');
 }
 
 function switchSettingsTab(tab){
-  // Update tab styles
-  document.getElementById('stab_catalog').style.borderBottomColor = tab==='catalog'?'var(--navy)':'transparent';
-  document.getElementById('stab_catalog').style.color = tab==='catalog'?'var(--navy)':'var(--muted)';
-  document.getElementById('stab_catalog').style.fontWeight = tab==='catalog'?'600':'400';
-  document.getElementById('stab_suppliers').style.borderBottomColor = tab==='suppliers'?'var(--navy)':'transparent';
-  document.getElementById('stab_suppliers').style.color = tab==='suppliers'?'var(--navy)':'var(--muted)';
-  document.getElementById('stab_suppliers').style.fontWeight = tab==='suppliers'?'600':'400';
-
+  ['company','catalog','suppliers'].forEach(t => {
+    const btn = document.getElementById('stab_'+t);
+    if(!btn) return;
+    btn.style.borderBottomColor = tab===t?'var(--navy)':'transparent';
+    btn.style.color = tab===t?'var(--navy)':'var(--muted)';
+    btn.style.fontWeight = tab===t?'600':'400';
+  });
   const el = document.getElementById('settingsContent');
   if(tab === 'catalog') renderCatalogSettings(el);
-  else renderSupplierSettings(el);
+  else if(tab === 'suppliers') renderSupplierSettings(el);
+  else if(tab === 'company') renderCompanySettings(el);
 }
 
-function renderCatalogSettings(el, editIdx){
-  let html = '';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
-  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + CATALOG.length + ' items in catalog</div>';
-  html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Item</button>';
-  html += '</div>';
 
+function renderCatalogSettings(el, editIdx){
+  var q = _catalogSearchQ || '';
+  var html = '';
+  html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
+  html += '<div style="flex:1;position:relative;">';
+  html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;">🔍</span>';
+  html += '<input id="cat_srch" placeholder="Search items..." oninput="_catalogSearchQ=this.value;renderCatalogSettings(document.getElementById(\'settingsContent\'))" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '</div>';
+  html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
+  html += '</div>';
+  var qLow = q.toLowerCase();
   CATALOG.forEach(function(item, i){
-    const isEditing = editIdx === i;
-    if(isEditing){
-      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
-      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Editing Item</div>';
+    if(qLow && !item.name.toLowerCase().includes(qLow) && !(item.sku||'').toLowerCase().includes(qLow)) return;
+    if(editIdx === i){
+      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + item.name + '</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
-      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name</label>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME</label>';
       html += '<input id="cedit_name" value="' + item.name + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
-      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">SKU</label>';
-      html += '<input id="cedit_sku" value="' + item.sku + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">SKU</label>';
+      html += '<input id="cedit_sku" value="' + (item.sku||'') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '</div>';
-      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Units (comma separated)</label>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label>';
       html += '<input id="cedit_units" value="' + (item.units||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="display:flex;gap:8px;">';
-      html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
-      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
+      html += '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
-      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);width:30px;flex-shrink:0;">' + (i+1) + '</div>';
-      html += '<div style="flex:1;min-width:0;">';
+      html += '<div onclick="catalogRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div style="flex:1;">';
       html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
-      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + item.sku + ' · ' + (item.units||[]).join(', ') + '</div>';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + (item.sku||'') + ' · ' + (item.units||[]).join(', ') + '</div>';
       html += '</div>';
-      html += '<button onclick="renderCatalogSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-      html += '<button onclick="deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '<button onclick="event.stopPropagation();deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
-
   el.innerHTML = html;
+  if(editIdx !== undefined){
+    var inp = document.getElementById('cedit_name');
+    if(inp) inp.focus();
+  }
 }
 
 function saveCatalogEdit(i){
-  const name = document.getElementById('cedit_name').value.trim();
-  const sku = document.getElementById('cedit_sku').value.trim();
-  const units = document.getElementById('cedit_units').value.split(',').map(u=>u.trim()).filter(u=>u);
+  var name = document.getElementById('cedit_name').value.trim();
+  var sku = document.getElementById('cedit_sku').value.trim();
+  var units = document.getElementById('cedit_units').value.split(',').map(function(u){return u.trim();}).filter(function(u){return u;});
   if(!name){ alert('Name is required.'); return; }
   CATALOG[i].name = name;
   CATALOG[i].sku = sku;
-  CATALOG[i].units = units;
+  CATALOG[i].units = units.length ? units : ['Units'];
   CATALOG[i]._custom = true;
   saveCatalogToStorage();
   renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
-function renderSupplierSettings(el, editIdx){
-  const suppliers = PRESET_SUPPLIERS_TEMPLATE;
-  let html = '';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
-  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">' + suppliers.length + ' suppliers in master list</div>';
-  html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Supplier</button>';
-  html += '</div>';
+async function deleteCatalogItem(i){
+  if(!confirm('Delete "' + CATALOG[i].name + '" from catalog?')) return;
+  var id = CATALOG[i].id;
+  CATALOG.splice(i, 1);
+  await saveDeletedCatalogItem(id);
+  renderCatalogSettings(document.getElementById('settingsContent'));
+}
 
+function catalogRowClick(i){
+  renderCatalogSettings(document.getElementById('settingsContent'), i);
+}
+
+function settingsCancelCatalog(){
+  renderCatalogSettings(document.getElementById('settingsContent'));
+}
+
+function renderSupplierSettings(el, editIdx){
+  var q = _supplierSearchQ || '';
+  var suppliers = PRESET_SUPPLIERS_TEMPLATE;
+  var html = '';
+  html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
+  html += '<div style="flex:1;position:relative;">';
+  html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;">🔍</span>';
+  html += '<input id="sup_srch" placeholder="Search suppliers..." oninput="_supplierSearchQ=this.value;renderSupplierSettings(document.getElementById(\'settingsContent\'))" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '</div>';
+  html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
+  html += '</div>';
+  var qLow = q.toLowerCase();
   suppliers.forEach(function(s, i){
-    const isEditing = editIdx === i;
-    if(isEditing){
-      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:6px;">';
-      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">Editing Supplier</div>';
+    if(qLow && !s.name.toLowerCase().includes(qLow) && !s.email.toLowerCase().includes(qLow)) return;
+    if(editIdx === i){
+      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + s.name + '</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">';
-      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name</label>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME</label>';
       html += '<input id="sedit_name" value="' + s.name + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
-      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Primary Email</label>';
+      html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">PRIMARY EMAIL</label>';
       html += '<input id="sedit_email" value="' + s.email + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '</div>';
-      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated)</label>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (comma separated)</label>';
       html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="display:flex;gap:8px;">';
-      html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Save</button>';
-      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
+      html += '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
       html += '</div></div>';
     } else {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;">';
-      html += '<div style="flex:1;min-width:0;">';
-      html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s._custom?'<span style="font-family:monospace;font-size:8px;background:#e8ecf5;color:var(--muted);padding:1px 5px;border-radius:3px;margin-left:6px;">custom</span>':'') + '</div>';
+      html += '<div onclick="supplierRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div style="flex:1;">';
+      html += '<div style="font-weight:600;font-size:13px;">' + s.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
-      html += '<button onclick="renderSupplierSettings(document.getElementById(&quot;settingsContent&quot;),' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️ Edit</button>';
-      html += '<button onclick="deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      html += '<button onclick="event.stopPropagation();deleteMasterSupplier(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
       html += '</div>';
     }
   });
-
   el.innerHTML = html;
+  if(editIdx !== undefined){
+    var inp = document.getElementById('sedit_name');
+    if(inp) inp.focus();
+  }
 }
 
 function saveSupplierEdit(i){
-  const name = document.getElementById('sedit_name').value.trim();
-  const email = document.getElementById('sedit_email').value.trim();
-  const others = document.getElementById('sedit_others').value.split(',').map(e=>e.trim()).filter(e=>e);
+  var name = document.getElementById('sedit_name').value.trim();
+  var email = document.getElementById('sedit_email').value.trim();
+  var others = document.getElementById('sedit_others').value.split(',').map(function(e){return e.trim();}).filter(function(e){return e;});
   if(!name){ alert('Name is required.'); return; }
   PRESET_SUPPLIERS_TEMPLATE[i].name = name;
   PRESET_SUPPLIERS_TEMPLATE[i].email = email;
@@ -1449,82 +1482,237 @@ function saveSupplierEdit(i){
   renderSupplierSettings(document.getElementById('settingsContent'));
 }
 
+async function deleteMasterSupplier(i){
+  if(!confirm('Remove "' + PRESET_SUPPLIERS_TEMPLATE[i].name + '" from master list?')) return;
+  var email = PRESET_SUPPLIERS_TEMPLATE[i].email;
+  PRESET_SUPPLIERS_TEMPLATE.splice(i, 1);
+  await saveDeletedSupplier(email);
+  renderSupplierSettings(document.getElementById('settingsContent'));
+}
+
+function supplierRowClick(i){
+  renderSupplierSettings(document.getElementById('settingsContent'), i);
+}
+
+function settingsCancelSupplier(){
+  renderSupplierSettings(document.getElementById('settingsContent'));
+}
+
 function addCatalogItem(){
-  const name = prompt('Item name:');
-  if(!name) return;
-  const sku = prompt('SKU (e.g. JAR-32L):') || '';
-  const units = prompt('Units (comma separated, e.g. Units,Case,Pallet):') || 'Units';
-  CATALOG.push({
-    id: 'custom_' + Date.now(),
-    name: name.trim(),
-    sku: sku.trim(),
-    units: units.split(',').map(u=>u.trim()),
-    cat: 'other',
-    _custom: true
-  });
-  saveCatalogToStorage();
-  switchSettingsTab('catalog');
+  var el = document.getElementById('settingsContent');
+  if(document.getElementById('catalog_add_form')) return;
+  var div = document.createElement('div');
+  div.id = 'catalog_add_form';
+  div.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  div.innerHTML = '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">New Catalog Item</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME *</label><input id="cadd_name" placeholder="e.g. Jar, 32oz" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">SKU</label><input id="cadd_sku" placeholder="e.g. JAR-32L" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label><input id="cadd_units" placeholder="e.g. Units, Case, Pallet, LB" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<button onclick="saveCatalogAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Item</button>' +
+    '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>' +
+    '</div>';
+  el.insertBefore(div, el.firstChild);
+  document.getElementById('cadd_name').focus();
 }
 
-
-
-function deleteCatalogItem(i){
-  if(!confirm('Delete "' + CATALOG[i].name + '" from catalog?')) return;
-  CATALOG.splice(i, 1);
-  saveCatalogToStorage();
-  switchSettingsTab('catalog');
-}
-
-function saveCatalogToStorage(){
-  try {
-    const custom = CATALOG.filter(c=>c._custom);
-    localStorage.setItem('ym_custom_catalog', JSON.stringify(custom));
-    // Save deleted IDs
-    const allIds = CATALOG.map(c=>c.id);
-    localStorage.setItem('ym_catalog_ids', JSON.stringify(allIds));
-  } catch(e){}
-}
-
-function loadCatalogFromStorage(){
-  try {
-    // Load custom items
-    const custom = JSON.parse(localStorage.getItem('ym_custom_catalog')||'[]');
-    custom.forEach(c => {
-      if(!CATALOG.find(x=>x.id===c.id)) CATALOG.push(c);
-    });
-    // Remove deleted items
-    const ids = JSON.parse(localStorage.getItem('ym_catalog_ids')||'null');
-    if(ids) {
-      for(let i=CATALOG.length-1;i>=0;i--){
-        if(!ids.includes(CATALOG[i].id)) CATALOG.splice(i,1);
-      }
-    }
-  } catch(e){}
+async function saveCatalogAdd(){
+  var name = document.getElementById('cadd_name').value.trim();
+  var sku = document.getElementById('cadd_sku').value.trim();
+  var units = document.getElementById('cadd_units').value.split(',').map(function(u){return u.trim();}).filter(function(u){return u;});
+  if(!name){ alert('Name is required.'); return; }
+  CATALOG.push({id:'custom_'+Date.now(), name:name, sku:sku, units:units.length?units:['Units'], cat:'other', _custom:true});
+  await saveCatalogToStorage();
+  renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
 function addMasterSupplier(){
-  const name = prompt('Supplier name:');
-  if(!name) return;
-  const email = prompt('Primary email:') || '';
-  const otherEmails = prompt('Additional emails (comma separated, optional):') || '';
-  const newSup = {
-    name: name.trim(),
-    email: email.trim(),
-    otherEmails: otherEmails ? otherEmails.split(',').map(e=>e.trim()).filter(e=>e) : [],
+  var el = document.getElementById('settingsContent');
+  if(document.getElementById('supplier_add_form')) return;
+  var div = document.createElement('div');
+  div.id = 'supplier_add_form';
+  div.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  div.innerHTML = '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">New Supplier</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME *</label><input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">PRIMARY EMAIL *</label><input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '</div>' +
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (optional)</label><input id="sadd_others" placeholder="e.g. quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Supplier</button>' +
+    '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>' +
+    '</div>';
+  el.insertBefore(div, el.firstChild);
+  document.getElementById('sadd_name').focus();
+}
+
+async function saveSupplierAdd(){
+  var name = document.getElementById('sadd_name').value.trim();
+  var email = document.getElementById('sadd_email').value.trim();
+  var others = document.getElementById('sadd_others').value.split(',').map(function(e){return e.trim();}).filter(function(e){return e;});
+  if(!name){ alert('Name is required.'); return; }
+  if(!email){ alert('Email is required.'); return; }
+  PRESET_SUPPLIERS_TEMPLATE.push({name:name, email:email, otherEmails:others, _custom:true});
+  await saveCustomSuppliers();
+  renderSupplierSettings(document.getElementById('settingsContent'));
+}
+
+
+function filterCatalog(q){
+  _catalogSearchQ = q;
+  const el = document.getElementById('settingsContent');
+  renderCatalogSettings(el);
+  const inp = document.getElementById('catalog_search');
+  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+}
+
+function filterSuppliers(q){
+  _supplierSearchQ = q;
+  const el = document.getElementById('settingsContent');
+  renderSupplierSettings(el);
+  const inp = document.getElementById('supplier_search');
+  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+}
+
+async function saveCatalogAdd(){
+  const name = document.getElementById('cadd_name').value.trim();
+  const sku = document.getElementById('cadd_sku').value.trim();
+  const units = document.getElementById('cadd_units').value.split(',').map(u=>u.trim()).filter(u=>u);
+  if(!name){ alert('Name is required.'); return; }
+  const newItem = {
+    id: 'custom_' + Date.now(),
+    name: name,
+    sku: sku,
+    units: units.length ? units : ['Units'],
+    cat: 'other',
     _custom: true
   };
-  PRESET_SUPPLIERS_TEMPLATE.push(newSup);
-  saveCustomSuppliers();
-  switchSettingsTab('suppliers');
+  CATALOG.push(newItem);
+  await saveCatalogToStorage();
+  renderCatalogSettings(document.getElementById('settingsContent'));
 }
 
 
 
-function deleteMasterSupplier(i){
+async function deleteCatalogItem(i){
+  if(!confirm('Delete "' + CATALOG[i].name + '" from catalog?')) return;
+  const id = CATALOG[i].id;
+  CATALOG.splice(i, 1);
+  await saveDeletedCatalogItem(id);
+  renderCatalogSettings(document.getElementById('settingsContent'));
+}
+
+async function saveCatalogToStorage(){
+  // Save all catalog items to Supabase
+  try {
+    for(let i=0; i<CATALOG.length; i++){
+      const item = CATALOG[i];
+      await supaFetch('/rest/v1/ym_catalog', 'POST', {
+        id: item.id,
+        name: item.name,
+        sku: item.sku || '',
+        units: item.units || [],
+        cat: item.cat || 'other',
+        sort_order: i,
+        deleted: false
+      }).catch(()=>{
+        // Try PATCH if POST fails (already exists)
+        return supaFetch('/rest/v1/ym_catalog?id=eq.' + item.id, 'PATCH', {
+          name: item.name,
+          sku: item.sku || '',
+          units: item.units || [],
+          sort_order: i,
+          deleted: false
+        });
+      });
+    }
+  } catch(e){ console.error('Save catalog error:', e); }
+}
+
+async function saveDeletedCatalogItem(id){
+  try {
+    await supaFetch('/rest/v1/ym_catalog?id=eq.' + id, 'PATCH', { deleted: true });
+  } catch(e){}
+}
+
+async function loadCatalogFromStorage(){
+  try {
+    const rows = await supaFetch('/rest/v1/ym_catalog?deleted=eq.false&order=sort_order.asc');
+    if(rows && rows.length){
+      rows.forEach(row => {
+        const existing = CATALOG.findIndex(c=>c.id===row.id);
+        if(existing >= 0){
+          // Update existing item name/sku/units from Supabase
+          CATALOG[existing].name = row.name;
+          CATALOG[existing].sku = row.sku;
+          if(row.units && row.units.length) CATALOG[existing].units = row.units;
+          CATALOG[existing]._synced = true;
+        } else {
+          // Add custom item that only exists in Supabase
+          CATALOG.push({
+            id: row.id, name: row.name, sku: row.sku||'',
+            units: row.units || ['Units'], cat: row.cat || 'other',
+            _custom: true, _synced: true
+          });
+        }
+      });
+      // Remove only items that were previously synced but now deleted in Supabase
+      const activeIds = rows.map(r=>r.id);
+      for(let i=CATALOG.length-1;i>=0;i--){
+        if(CATALOG[i]._synced && !activeIds.includes(CATALOG[i].id)){
+          CATALOG.splice(i,1);
+        }
+      }
+    }
+  } catch(e){ console.error('Load catalog error:', e); }
+}
+
+function addMasterSupplier(){
+  const el = document.getElementById('settingsContent');
+  const addForm = document.createElement('div');
+  addForm.id = 'supplier_add_form';
+  addForm.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  addForm.innerHTML = `
+    <div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">New Supplier</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name *</label>
+      <input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Primary Email *</label>
+      <input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    </div>
+    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated, optional)</label>
+    <input id="sadd_others" placeholder="e.g. support@acme.com, quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Supplier</button>
+      <button onclick="renderSupplierSettings(document.getElementById('settingsContent'))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
+    </div>`;
+  el.insertBefore(addForm, el.firstChild);
+  document.getElementById('sadd_name').focus();
+}
+
+async function saveSupplierAdd(){
+  const name = document.getElementById('sadd_name').value.trim();
+  const email = document.getElementById('sadd_email').value.trim();
+  const others = document.getElementById('sadd_others').value.split(',').map(e=>e.trim()).filter(e=>e);
+  if(!name){ alert('Name is required.'); return; }
+  if(!email){ alert('Email is required.'); return; }
+  PRESET_SUPPLIERS_TEMPLATE.push({
+    name: name, email: email, otherEmails: others, _custom: true
+  });
+  await saveCustomSuppliers();
+  renderSupplierSettings(document.getElementById('settingsContent'));
+}
+
+
+
+async function deleteMasterSupplier(i){
   if(!confirm('Remove "' + PRESET_SUPPLIERS_TEMPLATE[i].name + '" from master list?')) return;
+  const email = PRESET_SUPPLIERS_TEMPLATE[i].email;
   PRESET_SUPPLIERS_TEMPLATE.splice(i, 1);
-  saveCustomSuppliers();
-  switchSettingsTab('suppliers');
+  await saveDeletedSupplier(email);
+  renderSupplierSettings(document.getElementById('settingsContent'));
 }
 
 function copyEmailBody(){
@@ -2625,24 +2813,60 @@ function saveSupplier(){
 }
 
 // Save/load custom suppliers added manually
-function saveCustomSuppliers(){
-  try{
-    const custom = PRESET_SUPPLIERS_TEMPLATE.filter(s=>s._custom);
-    localStorage.setItem('ym_custom_suppliers', JSON.stringify(custom));
-  }catch(e){}
+async function saveCustomSuppliers(){
+  try {
+    for(let i=0; i<PRESET_SUPPLIERS_TEMPLATE.length; i++){
+      const s = PRESET_SUPPLIERS_TEMPLATE[i];
+      const id = 'sup_' + s.email.replace(/[^a-zA-Z0-9]/g,'_');
+      try {
+        await supaFetch('/rest/v1/ym_suppliers', 'POST', {
+          id: id, name: s.name, email: s.email,
+          other_emails: s.otherEmails || [], sort_order: i, deleted: false
+        });
+      } catch(e2){
+        await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id, 'PATCH', {
+          name: s.name, email: s.email,
+          other_emails: s.otherEmails || [], sort_order: i, deleted: false
+        });
+      }
+    }
+  } catch(e){ console.error('Save suppliers error:', e); }
 }
 
-function loadCustomSuppliers(){
-  try{
-    const saved = localStorage.getItem('ym_custom_suppliers');
-    if(saved){
-      const custom = JSON.parse(saved);
-      custom.forEach(s=>{
-        const exists = PRESET_SUPPLIERS_TEMPLATE.some(p=>p.email===s.email);
-        if(!exists) PRESET_SUPPLIERS_TEMPLATE.push(s);
+async function saveDeletedSupplier(email){
+  try {
+    const id = 'sup_' + email.replace(/[^a-zA-Z0-9]/g,'_');
+    await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id, 'PATCH', { deleted: true });
+  } catch(e){}
+}
+
+async function loadCustomSuppliers(){
+  try {
+    const rows = await supaFetch('/rest/v1/ym_suppliers?deleted=eq.false&order=sort_order.asc');
+    if(rows && rows.length){
+      rows.forEach(row => {
+        if(row.id === '_company_info') return; // skip company info row
+        const existing = PRESET_SUPPLIERS_TEMPLATE.findIndex(s=>s.email===row.email);
+        if(existing >= 0){
+          PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
+          PRESET_SUPPLIERS_TEMPLATE[existing].otherEmails = row.other_emails || [];
+          PRESET_SUPPLIERS_TEMPLATE[existing]._synced = true;
+        } else {
+          PRESET_SUPPLIERS_TEMPLATE.push({
+            name: row.name, email: row.email,
+            otherEmails: row.other_emails || [], _custom: true, _synced: true
+          });
+        }
       });
+      // Remove only synced suppliers that were deleted
+      const activeEmails = rows.filter(r=>r.id!=='_company_info').map(r=>r.email);
+      for(let i=PRESET_SUPPLIERS_TEMPLATE.length-1;i>=0;i--){
+        if(PRESET_SUPPLIERS_TEMPLATE[i]._synced && !activeEmails.includes(PRESET_SUPPLIERS_TEMPLATE[i].email)){
+          PRESET_SUPPLIERS_TEMPLATE.splice(i,1);
+        }
+      }
     }
-  }catch(e){}
+  } catch(e){ console.error('Load suppliers error:', e); }
 }
 
 function removeSupplier(id){
@@ -2763,10 +2987,10 @@ window.addEventListener('load',()=>{
   if(urlParams.get('gmail_connected')) {
     window.history.replaceState({}, '', './rfp.html');
   }
-  loadCatalogFromStorage();
-  loadCustomSuppliers();
-  loadProjects();
-  render();
+  Promise.all([loadCatalogFromStorage(), loadCustomSuppliers(), loadCompanyInfo()]).then(()=>{
+    loadProjects();
+    render();
+  });
 });
 document.querySelectorAll('.ov').forEach(o=>{
   o.addEventListener('click',function(e){
