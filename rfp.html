@@ -1673,16 +1673,16 @@ function filterCatalog(q){
   _catalogSearchQ = q;
   const el = document.getElementById('settingsContent');
   renderCatalogSettings(el);
-  const inp = document.getElementById('catalog_search');
-  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+  const inp = document.getElementById('cat_srch');
+  if(inp){ inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
 }
 
 function filterSuppliers(q){
   _supplierSearchQ = q;
   const el = document.getElementById('settingsContent');
   renderSupplierSettings(el);
-  const inp = document.getElementById('supplier_search');
-  if(inp){ inp.value = q; inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
+  const inp = document.getElementById('sup_srch');
+  if(inp){ inp.focus(); const len = q.length; inp.setSelectionRange(len,len); }
 }
 
 async function saveCatalogAdd(){
