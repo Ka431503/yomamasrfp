@@ -596,18 +596,17 @@ async function submitQuotes() {
   if(btn2) { btn2.textContent = 'Uploading files...'; }
 
   for(var k in finalQuotes) {
-    var idx = parseInt(k);
-    var files = attachedFiles[idx] || [];
+    var itemIdx = parseInt(k);
+    var files = attachedFiles[itemIdx] || [];
     if(files.length > 0) {
       var uploadedFiles = [];
       for(var fi = 0; fi < files.length; fi++) {
         var fileObj = files[fi];
-        // Convert base64 back to blob for upload
         try {
           var response = await fetch(fileObj.data);
           var blob = await response.blob();
           var file = new File([blob], fileObj.name, {type: fileObj.type});
-          var uploaded = await uploadFileToStorage(file, token, idx, fi);
+          var uploaded = await uploadFileToStorage(file, token, itemIdx, fi);
           if(uploaded) uploadedFiles.push(uploaded);
         } catch(e) {
           console.error('File upload error:', e);
@@ -615,7 +614,6 @@ async function submitQuotes() {
       }
       finalQuotes[k].attachments = uploadedFiles;
     }
-    // Clean base64 data from rows
     if(finalQuotes[k].rows) {
       finalQuotes[k].rows.forEach(function(r){ delete r.attachments; });
     }
