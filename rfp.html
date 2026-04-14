@@ -1355,7 +1355,7 @@ function renderCatalogSettings(el, editIdx){
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;">🔍</span>';
-  html += '<input id="cat_srch" placeholder="Search items..." oninput="_catalogSearchQ=this.value;renderCatalogSettings(document.getElementById(\'settingsContent\'))" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="cat_srch" placeholder="Search items..." oninput="filterCatalog(this.value)" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
@@ -1433,7 +1433,7 @@ function renderSupplierSettings(el, editIdx){
   html += '<div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;">';
   html += '<div style="flex:1;position:relative;">';
   html += '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;">🔍</span>';
-  html += '<input id="sup_srch" placeholder="Search suppliers..." oninput="_supplierSearchQ=this.value;renderSupplierSettings(document.getElementById(\'settingsContent\'))" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
+  html += '<input id="sup_srch" placeholder="Search suppliers..." oninput="filterSuppliers(this.value)" value="' + q + '" style="width:100%;padding:8px 10px 8px 34px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;"/>';
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
