@@ -2448,6 +2448,7 @@ function renderResp(){
                 <div style="font-family:monospace;font-size:26px;font-weight:700;color:${isWin?'var(--green)':isHi?'var(--accent)':'var(--navy)'};">${fmtPrice(qd.price)}</div>
                 <div style="font-family:monospace;font-size:11px;color:var(--muted);margin-top:3px;">per ${qd.unit||'unit'} &nbsp;·&nbsp; ${qd.currency||'USD'}</div>
                 ${qd.unit!==it.unit&&sameG(qd.unit,it.unit)?`<div style="font-family:monospace;font-size:10px;color:var(--blue);margin-top:3px;">≈ ${fmtPrice(norm)} / ${it.unit}</div>`:''}
+                ${qd.rows?.[0]?.price_each?`<div style="font-family:monospace;font-size:11px;color:var(--muted);margin-top:3px;">💰 Price: ${fmtPrice(qd.rows[0].price_each)}${qd.rows[0].price_per?' / '+qd.rows[0].price_per:''}</div>`:''}
                 ${qd.rows&&qd.rows.filter(r=>r.price).length>1?`<div style="font-family:monospace;font-size:9px;color:var(--muted);margin-top:4px;padding:3px 6px;background:var(--tag);border-radius:3px;display:inline-block;">${qd.rows.filter(r=>r.price).length} options ↓</div>`:''}
               `}
               ${qd.lead?`<div style="font-size:11px;color:var(--muted);margin-top:5px;">🚚 Lead time: ${qd.lead}</div>`:''}
@@ -2584,7 +2585,7 @@ function renderAnalysis(){
           }
           html += '</div></div>';
           html += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">';
-          if(firstRow.price_each) html += '<div style="font-size:11px;color:var(--muted);">💰 Price: $'+parseFloat(firstRow.price_each).toFixed(5)+(firstRow.price_per?' / '+firstRow.price_per:'')+'</div>';
+          if(firstRow.price_each) html += '<div style="font-size:11px;color:var(--muted);">💰 Price: '+fmtPrice(firstRow.price_each)+(firstRow.price_per?' / '+firstRow.price_per:'')+'</div>';
           if(firstRow.price_per && !firstRow.price_each) html += '<div style="font-size:11px;color:var(--muted);">📦 '+firstRow.price_per+'</div>';
           if(firstRow.moq||qd.moq) html += '<div style="font-size:11px;color:var(--muted);">📋 MOQ: '+(firstRow.moq||qd.moq)+'</div>';
           if(firstRow.incoterms||qd.incoterms) html += '<div style="font-size:11px;color:var(--muted);">🚢 '+(firstRow.incoterms||qd.incoterms)+'</div>';
