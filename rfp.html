@@ -1359,8 +1359,9 @@ function renderCatalogSettings(el, editIdx){
   html += '</div>';
   html += '<button onclick="addCatalogItem()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Item</button>';
   html += '</div>';
+  var qLow = q.toLowerCase();
   CATALOG.forEach(function(item, i){
-    // filtering handled by filterCatalog()
+    if(qLow && !item.name.toLowerCase().includes(qLow) && !(item.sku||'').toLowerCase().includes(qLow)) return;
     if(editIdx === i){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + item.name + '</div>';
@@ -1437,8 +1438,9 @@ function renderSupplierSettings(el, editIdx){
   html += '</div>';
   html += '<button onclick="addMasterSupplier()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;white-space:nowrap;">+ Add Supplier</button>';
   html += '</div>';
+  var qLow = q.toLowerCase();
   suppliers.forEach(function(s, i){
-    // filtering handled by filterSuppliers()
+    if(qLow && !s.name.toLowerCase().includes(qLow) && !s.email.toLowerCase().includes(qLow)) return;
     if(editIdx === i){
       html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing: ' + s.name + '</div>';
