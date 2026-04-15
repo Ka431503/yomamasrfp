@@ -407,6 +407,7 @@ select.rmc-input{cursor:pointer;}
     <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
+    <button id="stab_categories" onclick="switchSettingsTab('categories')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏷️ Categories</button>
   </div>
   <div id="settingsContent" style="max-height:65vh;overflow-y:auto;"></div>
 </div>
@@ -457,6 +458,7 @@ select.rmc-input{cursor:pointer;}
     <button id="stab_company" onclick="switchSettingsTab('company')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏢 Company Info</button>
     <button id="stab_catalog" onclick="switchSettingsTab('catalog')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid var(--navy);background:none;cursor:pointer;font-weight:600;color:var(--navy);">📋 Catalog Items</button>
     <button id="stab_suppliers" onclick="switchSettingsTab('suppliers')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">👥 Suppliers</button>
+    <button id="stab_categories" onclick="switchSettingsTab('categories')" style="font-family:'IBM Plex Mono',monospace;font-size:11px;padding:10px 20px;border:none;border-bottom:3px solid transparent;background:none;cursor:pointer;color:var(--muted);">🏷️ Categories</button>
   </div>
   <div id="settingsContent" style="max-height:65vh;overflow-y:auto;"></div>
 </div>
@@ -1340,7 +1342,7 @@ function showSettings(){
 }
 
 function switchSettingsTab(tab){
-  ['company','catalog','suppliers'].forEach(t => {
+  ['company','catalog','suppliers','categories'].forEach(t => {
     const btn = document.getElementById('stab_'+t);
     if(!btn) return;
     btn.style.borderBottomColor = tab===t?'var(--navy)':'transparent';
@@ -1351,6 +1353,7 @@ function switchSettingsTab(tab){
   if(tab === 'catalog') renderCatalogSettings(el);
   else if(tab === 'suppliers') renderSupplierSettings(el);
   else if(tab === 'company') renderCompanySettings(el);
+  else if(tab === 'categories') renderCategoriesSettings(el);
 }
 
 
@@ -1378,7 +1381,7 @@ function renderCatalogSettings(el, editIdx){
       html += '</div>';
       html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label>';
       html += '<input id="cedit_units" value="' + (item.units||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
-      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><select id="cedit_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="packaging"'+(item.cat==="packaging"?" selected":"")+'>Packaging</option><option value="spice"'+(item.cat==="spice"?" selected":"")+'>Spices & Dry</option><option value="produce"'+(item.cat==="produce"?" selected":"")+'>Produce & Purees</option><option value="tomato"'+(item.cat==="tomato"?" selected":"")+'>Tomato</option><option value="dairy"'+(item.cat==="dairy"?" selected":"")+'>Dairy</option><option value="liquid"'+(item.cat==="liquid"?" selected":"")+'>Liquids</option><option value="oil"'+(item.cat==="oil"?" selected":"")+'>Oils</option><option value="other"'+(item.cat==="other"?" selected":"")+'>Other</option></select></div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><select id="cedit_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;">'; ITEM_CATEGORIES.forEach(function(c){ html += '<option value="'+c.id+'"'+(item.cat===c.id?' selected':'')+'>'+c.label+'</option>'; }); html += '</select></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
       html += '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
@@ -1460,7 +1463,7 @@ function renderSupplierSettings(el, editIdx){
       html += '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (comma separated)</label>';
       html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY <span style="color:var(--muted);font-weight:400;">(e.g. Packaging, Ingredients, Caps, Jars)</span></label>';
-      html += '<input id="sedit_cat" placeholder="e.g. Packaging" value="' + (s.category||'') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<select id="sedit_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select category --</option>'; ITEM_CATEGORIES.forEach(function(c){ html += '<option value="'+c.id+'"'+((s.category||'')===(c.id)?' selected':'')+'>'+c.label+'</option>'; }); html += '</select></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
       html += '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
@@ -1565,6 +1568,7 @@ function addMasterSupplier(){
     '</div>';
   el.insertBefore(div, el.firstChild);
   document.getElementById('sadd_name').focus();
+  var catSel = document.getElementById('sadd_cat'); if(catSel){ ITEM_CATEGORIES.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.label; catSel.appendChild(o); }); }
 }
 
 async function saveSupplierAdd(){
@@ -1682,6 +1686,133 @@ async function saveCompanySettings(){
   const btn = document.querySelector('#settingsContent button');
   if(btn){ btn.textContent='✓ Saved!'; btn.style.background='var(--green)'; setTimeout(()=>{btn.textContent='✓ Save Company Info';btn.style.background='var(--navy)';},2000); }
 }
+
+// ── CATEGORIES ──────────────────────────────────────────────
+let ITEM_CATEGORIES = [
+  {id:'packaging', label:'Packaging'},
+  {id:'spice', label:'Spices & Dry'},
+  {id:'produce', label:'Produce & Purees'},
+  {id:'tomato', label:'Tomato'},
+  {id:'dairy', label:'Dairy'},
+  {id:'liquid', label:'Liquids'},
+  {id:'oil', label:'Oils'},
+  {id:'other', label:'Other'}
+];
+
+async function loadCategories(){
+  try {
+    const rows = await supaFetch('/rest/v1/ym_suppliers?id=eq._item_categories');
+    if(rows && rows.length && rows[0].other_emails && Array.isArray(rows[0].other_emails)){
+      ITEM_CATEGORIES = rows[0].other_emails;
+    }
+  } catch(e){}
+}
+
+async function saveCategories(){
+  try {
+    await supaFetch('/rest/v1/ym_suppliers', 'POST', {
+      id:'_item_categories', name:'_item_categories', email:'_item_categories',
+      other_emails: ITEM_CATEGORIES, sort_order:-2, deleted:false
+    });
+  } catch(e){
+    await supaFetch('/rest/v1/ym_suppliers?id=eq._item_categories', 'PATCH', {other_emails: ITEM_CATEGORIES});
+  }
+}
+
+function renderCategoriesSettings(el, editIdx){
+  var html = '';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">';
+  html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">'+ITEM_CATEGORIES.length+' categories</div>';
+  html += '<button onclick="addCategory()" style="font-family:monospace;font-size:11px;padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">+ Add Category</button>';
+  html += '</div>';
+
+  ITEM_CATEGORIES.forEach(function(cat, i){
+    if(editIdx === i){
+      html += '<div style="padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:8px;">';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">Editing Category</div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">DISPLAY NAME</label>';
+      html += '<input id="catedit_label" value="'+cat.label+'" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div style="display:flex;gap:8px;">';
+      html += '<button onclick="saveCategoryEdit('+i+')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
+      html += '<button onclick="settingsCancelCategories()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
+      html += '</div></div>';
+    } else {
+      html += '<div onclick="categoryRowClick('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
+      html += '<div style="flex:1;font-weight:600;font-size:13px;">'+cat.label+'</div>';
+      html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">ID: '+cat.id+'</div>';
+      html += '<button onclick="event.stopPropagation();categoryRowClick('+i+')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
+      if(cat._custom){
+        html += '<button onclick="event.stopPropagation();deleteCategory('+i+')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
+      }
+      html += '</div>';
+    }
+  });
+
+  el.innerHTML = html;
+}
+
+function categoryRowClick(i){
+  renderCategoriesSettings(document.getElementById('settingsContent'), i);
+}
+
+function settingsCancelCategories(){
+  renderCategoriesSettings(document.getElementById('settingsContent'));
+}
+
+async function saveCategoryEdit(i){
+  var label = document.getElementById('catedit_label').value.trim();
+  if(!label){ alert('Name is required.'); return; }
+  ITEM_CATEGORIES[i].label = label;
+  await saveCategories();
+  renderCategoriesSettings(document.getElementById('settingsContent'));
+  // Update CATS_MAP
+  updateCatsMap();
+}
+
+function addCategory(){
+  var el = document.getElementById('settingsContent');
+  if(document.getElementById('cat_add_form')) return;
+  var div = document.createElement('div');
+  div.id = 'cat_add_form';
+  div.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
+  div.innerHTML = '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">New Category</div>'+
+    '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">DISPLAY NAME *</label>'+
+    '<input id="catadd_label" placeholder="e.g. Caps & Closures" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>'+
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ID (lowercase, no spaces)</label>'+
+    '<input id="catadd_id" placeholder="e.g. caps" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>'+
+    '<div style="display:flex;gap:8px;">'+
+    '<button onclick="saveCategoryAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Category</button>'+
+    '<button onclick="settingsCancelCategories()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>'+
+    '</div>';
+  el.insertBefore(div, el.firstChild);
+  document.getElementById('catadd_label').focus();
+}
+
+async function saveCategoryAdd(){
+  var label = document.getElementById('catadd_label').value.trim();
+  var id = document.getElementById('catadd_id').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'_');
+  if(!label){ alert('Name is required.'); return; }
+  if(!id) id = label.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  ITEM_CATEGORIES.push({id:id, label:label, _custom:true});
+  await saveCategories();
+  updateCatsMap();
+  renderCategoriesSettings(document.getElementById('settingsContent'));
+}
+
+async function deleteCategory(i){
+  if(!confirm('Delete "'+ITEM_CATEGORIES[i].label+'" category?')) return;
+  ITEM_CATEGORIES.splice(i, 1);
+  await saveCategories();
+  updateCatsMap();
+  renderCategoriesSettings(document.getElementById('settingsContent'));
+}
+
+function updateCatsMap(){
+  ITEM_CATEGORIES.forEach(function(c){
+    CATS_MAP[c.id] = c.label;
+  });
+}
+
 
 function filterCatalog(q){
   _catalogSearchQ = q;
@@ -1807,7 +1938,7 @@ function addMasterSupplier(){
     </div>
     <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated, optional)</label>
     <input id="sadd_others" placeholder="e.g. support@acme.com, quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
-    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><input id="sadd_cat" placeholder="e.g. Packaging, Caps, Ingredients" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    '<select id="sadd_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select category --</option>'; ITEM_CATEGORIES.forEach(function(c){ var opt=document.createElement('option'); opt.value=c.id; opt.textContent=c.label; document.getElementById('sadd_cat') && document.getElementById('sadd_cat').appendChild(opt); });
     <div style="display:flex;gap:8px;">
       <button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Supplier</button>
       <button onclick="renderSupplierSettings(document.getElementById('settingsContent'))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
@@ -3125,7 +3256,7 @@ window.addEventListener('load',()=>{
   if(urlParams.get('gmail_connected')) {
     window.history.replaceState({}, '', './rfp.html');
   }
-  Promise.all([loadCatalogFromStorage(), loadCustomSuppliers(), loadCompanyInfo()]).then(()=>{
+  Promise.all([loadCatalogFromStorage(), loadCustomSuppliers(), loadCompanyInfo(), loadCategories()]).then(()=>{
     loadProjects();
     render();
   });
