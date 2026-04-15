@@ -517,7 +517,12 @@ select.rmc-input{cursor:pointer;}
 <div class="modal" style="width:680px;">
   <h2>Add <em>Suppliers</em></h2>
   <p style="font-family:monospace;font-size:10px;color:var(--muted);margin-bottom:14px;">Select from your supplier list or add a new one manually</p>
-  <input class="srch" id="supSearch" placeholder="Search by name or email…" oninput="renderSupPicker()"/>
+  <div style="display:flex;gap:8px;margin-bottom:8px;">
+    <input class="srch" id="supSearch" placeholder="Search by name or email…" oninput="renderSupPicker()" style="flex:1;"/>
+    <select id="supCatFilter" onchange="renderSupPicker()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:5px;font-size:12px;font-family:monospace;background:#fff;min-width:130px;">
+      <option value="">All Categories</option>
+    </select>
+  </div>
   <div class="picker-grid" id="supPickerGrid" style="max-height:380px;"></div>
   <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
     <button class="btn cancel" onclick="closeAll();openSupModal()">+ Add New Supplier Manually</button>
@@ -1373,6 +1378,7 @@ function renderCatalogSettings(el, editIdx){
       html += '</div>';
       html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label>';
       html += '<input id="cedit_units" value="' + (item.units||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><select id="cedit_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="packaging"'+(item.cat==="packaging"?" selected":"")+'>Packaging</option><option value="spice"'+(item.cat==="spice"?" selected":"")+'>Spices & Dry</option><option value="produce"'+(item.cat==="produce"?" selected":"")+'>Produce & Purees</option><option value="tomato"'+(item.cat==="tomato"?" selected":"")+'>Tomato</option><option value="dairy"'+(item.cat==="dairy"?" selected":"")+'>Dairy</option><option value="liquid"'+(item.cat==="liquid"?" selected":"")+'>Liquids</option><option value="oil"'+(item.cat==="oil"?" selected":"")+'>Oils</option><option value="other"'+(item.cat==="other"?" selected":"")+'>Other</option></select></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveCatalogEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
       html += '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
@@ -1406,6 +1412,7 @@ function saveCatalogEdit(i){
   CATALOG[i].name = name;
   CATALOG[i].sku = sku;
   CATALOG[i].units = units.length ? units : ['Units'];
+  CATALOG[i].cat = document.getElementById('cedit_cat') ? document.getElementById('cedit_cat').value : CATALOG[i].cat;
   CATALOG[i]._custom = true;
   saveCatalogToStorage();
   renderCatalogSettings(document.getElementById('settingsContent'));
@@ -1450,8 +1457,10 @@ function renderSupplierSettings(el, editIdx){
       html += '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">PRIMARY EMAIL</label>';
       html += '<input id="sedit_email" value="' + s.email + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '</div>';
-      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (comma separated)</label>';
+      html += '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (comma separated)</label>';
       html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY <span style="color:var(--muted);font-weight:400;">(e.g. Packaging, Ingredients, Caps, Jars)</span></label>';
+      html += '<input id="sedit_cat" placeholder="e.g. Packaging" value="' + (s.category||'') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
       html += '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
@@ -1459,7 +1468,7 @@ function renderSupplierSettings(el, editIdx){
     } else {
       html += '<div class="sup-row" data-name="' + s.name + '" data-email="' + s.email + '" onclick="supplierRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
       html += '<div style="flex:1;">';
-      html += '<div style="font-weight:600;font-size:13px;">' + s.name + '</div>';
+      html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s.category?'<span style="font-family:monospace;font-size:9px;background:#e8ecf5;color:var(--muted);padding:1px 6px;border-radius:3px;margin-left:6px;">'+s.category+'</span>':'') + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
       html += '<button onclick="event.stopPropagation();supplierRowClick(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
@@ -1485,6 +1494,7 @@ function saveSupplierEdit(i){
   PRESET_SUPPLIERS_TEMPLATE[i].name = name;
   PRESET_SUPPLIERS_TEMPLATE[i].email = email;
   PRESET_SUPPLIERS_TEMPLATE[i].otherEmails = others;
+  PRESET_SUPPLIERS_TEMPLATE[i].category = document.getElementById('sedit_cat') ? document.getElementById('sedit_cat').value.trim() : (PRESET_SUPPLIERS_TEMPLATE[i].category||'');
   PRESET_SUPPLIERS_TEMPLATE[i]._custom = true;
   saveCustomSuppliers();
   renderSupplierSettings(document.getElementById('settingsContent'));
@@ -1531,7 +1541,8 @@ async function saveCatalogAdd(){
   var sku = document.getElementById('cadd_sku').value.trim();
   var units = document.getElementById('cadd_units').value.split(',').map(function(u){return u.trim();}).filter(function(u){return u;});
   if(!name){ alert('Name is required.'); return; }
-  CATALOG.push({id:'custom_'+Date.now(), name:name, sku:sku, units:units.length?units:['Units'], cat:'other', _custom:true});
+  var newCat = document.getElementById('cadd_cat') ? document.getElementById('cadd_cat').value : 'other';
+  CATALOG.push({id:'custom_'+Date.now(), name:name, sku:sku, units:units.length?units:['Units'], cat:newCat, _custom:true});
   await saveCatalogToStorage();
   renderCatalogSettings(document.getElementById('settingsContent'));
 }
@@ -1562,7 +1573,8 @@ async function saveSupplierAdd(){
   var others = document.getElementById('sadd_others').value.split(',').map(function(e){return e.trim();}).filter(function(e){return e;});
   if(!name){ alert('Name is required.'); return; }
   if(!email){ alert('Email is required.'); return; }
-  PRESET_SUPPLIERS_TEMPLATE.push({name:name, email:email, otherEmails:others, _custom:true});
+  var cat = document.getElementById('sadd_cat') ? document.getElementById('sadd_cat').value.trim() : '';
+  PRESET_SUPPLIERS_TEMPLATE.push({name:name, email:email, otherEmails:others, category:cat, _custom:true});
   await saveCustomSuppliers();
   renderSupplierSettings(document.getElementById('settingsContent'));
 }
@@ -1795,6 +1807,7 @@ function addMasterSupplier(){
     </div>
     <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated, optional)</label>
     <input id="sadd_others" placeholder="e.g. support@acme.com, quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
+    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><input id="sadd_cat" placeholder="e.g. Packaging, Caps, Ingredients" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
     <div style="display:flex;gap:8px;">
       <button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Supplier</button>
       <button onclick="renderSupplierSettings(document.getElementById('settingsContent'))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
@@ -2837,16 +2850,28 @@ let supPickerSel = new Set();
 function openSupPickerModal(){
   supPickerSel = new Set();
   document.getElementById('supSearch').value='';
+  document.getElementById('supCatFilter') && (document.getElementById('supCatFilter').value='');
   renderSupPicker();
   document.getElementById('supPickerOv').classList.add('open');
 }
 
 function renderSupPicker(){
   const q = document.getElementById('supSearch').value.toLowerCase();
+  const catSel = document.getElementById('supCatFilter');
+  const catFilter = catSel ? catSel.value : '';
+
+  // Populate category dropdown
+  if(catSel){
+    const cats = [...new Set(PRESET_SUPPLIERS_TEMPLATE.map(s=>s.category).filter(Boolean))].sort();
+    const current = catSel.value;
+    catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c=>`<option value="${c}" ${current===c?'selected':''}>${c}</option>`).join('');
+  }
+
   const existingEmails = new Set(state.suppliers.map(s=>s.email.toLowerCase()));
   const filtered = PRESET_SUPPLIERS_TEMPLATE.filter(s =>
-    !q || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) ||
-    s.otherEmails.some(e=>e.toLowerCase().includes(q))
+    (!q || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) ||
+    s.otherEmails.some(e=>e.toLowerCase().includes(q))) &&
+    (!catFilter || (s.category||'') === catFilter)
   );
   document.getElementById('supPickerGrid').innerHTML = filtered.map(s => {
     const isAdded = existingEmails.has(s.email.toLowerCase());
