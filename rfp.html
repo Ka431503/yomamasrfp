@@ -1928,21 +1928,17 @@ function addMasterSupplier(){
   const addForm = document.createElement('div');
   addForm.id = 'supplier_add_form';
   addForm.style.cssText = 'padding:14px;background:#f0f4ff;border:2px solid var(--navy);border-radius:8px;margin-bottom:14px;';
-  addForm.innerHTML = `
-    <div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;">New Supplier</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
-      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name *</label>
-      <input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
-      <div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Primary Email *</label>
-      <input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
-    </div>
-    <div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Additional Emails (comma separated, optional)</label>
-    <input id="sadd_others" placeholder="e.g. support@acme.com, quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>
-    '<select id="sadd_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select category --</option>'; ITEM_CATEGORIES.forEach(function(c){ var opt=document.createElement('option'); opt.value=c.id; opt.textContent=c.label; document.getElementById('sadd_cat') && document.getElementById('sadd_cat').appendChild(opt); });
-    <div style="display:flex;gap:8px;">
-      <button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">✓ Add Supplier</button>
-      <button onclick="renderSupplierSettings(document.getElementById('settingsContent'))" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>
-    </div>`;
+  addForm.innerHTML = '<div style="font-family:monospace;font-size:10px;color:var(--navy);margin-bottom:10px;text-transform:uppercase;">New Supplier</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">NAME *</label><input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">PRIMARY EMAIL *</label><input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '</div>' +
+    '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">ADDITIONAL EMAILS (optional)</label><input id="sadd_others" placeholder="e.g. quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">CATEGORY</label><select id="sadd_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select category --</option></select></div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Supplier</button>' +
+    '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>' +
+    '</div>';
   el.insertBefore(addForm, el.firstChild);
   document.getElementById('sadd_name').focus();
 }
