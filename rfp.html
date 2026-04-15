@@ -1530,13 +1530,15 @@ function addCatalogItem(){
     '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME *</label><input id="cadd_name" placeholder="e.g. Jar, 32oz" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
     '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">SKU</label><input id="cadd_sku" placeholder="e.g. JAR-32L" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
     '</div>' +
-    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label><input id="cadd_units" placeholder="e.g. Units, Case, Pallet, LB" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">UNITS (comma separated)</label><input id="cadd_units" placeholder="e.g. Units, Case, Pallet, LB" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><select id="cadd_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="other">-- Select --</option></select></div>' +
     '<div style="display:flex;gap:8px;">' +
     '<button onclick="saveCatalogAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Item</button>' +
     '<button onclick="settingsCancelCatalog()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>' +
     '</div>';
   el.insertBefore(div, el.firstChild);
   document.getElementById('cadd_name').focus();
+  var catSelC = document.getElementById('cadd_cat'); if(catSelC){ catSelC.innerHTML='<option value="">-- Select --</option>'; ITEM_CATEGORIES.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.label; catSelC.appendChild(o); }); }
 }
 
 async function saveCatalogAdd(){
@@ -1561,14 +1563,15 @@ function addMasterSupplier(){
     '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">NAME *</label><input id="sadd_name" placeholder="e.g. Acme Glass Co." style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
     '<div><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">PRIMARY EMAIL *</label><input id="sadd_email" placeholder="e.g. sales@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
     '</div>' +
-    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (optional)</label><input id="sadd_others" placeholder="e.g. quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (optional)</label><input id="sadd_others" placeholder="e.g. quotes@acme.com" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>' +
+    '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY</label><select id="sadd_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select --</option></select></div>' +
     '<div style="display:flex;gap:8px;">' +
     '<button onclick="saveSupplierAdd()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Add Supplier</button>' +
     '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>' +
     '</div>';
   el.insertBefore(div, el.firstChild);
   document.getElementById('sadd_name').focus();
-  var catSel = document.getElementById('sadd_cat'); if(catSel){ ITEM_CATEGORIES.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.label; catSel.appendChild(o); }); }
+  var catSel = document.getElementById('sadd_cat'); if(catSel){ catSel.innerHTML='<option value="">-- Select --</option>'; ITEM_CATEGORIES.forEach(function(c){ var o=document.createElement('option'); o.value=c.id; o.textContent=c.label; catSel.appendChild(o); }); }
 }
 
 async function saveSupplierAdd(){
