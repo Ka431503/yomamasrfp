@@ -1713,13 +1713,17 @@ async function loadCategories(){
 
 async function saveCategories(){
   try {
-    await supaFetch('/rest/v1/ym_suppliers', 'POST', {
-      id:'_item_categories', name:'_item_categories', email:'_item_categories',
-      other_emails: ITEM_CATEGORIES, sort_order:-2, deleted:false
-    });
-  } catch(e){
-    await supaFetch('/rest/v1/ym_suppliers?id=eq._item_categories', 'PATCH', {other_emails: ITEM_CATEGORIES});
-  }
+    // Use upsert approach - PATCH first, POST if not exists
+    const existing = await supaFetch('/rest/v1/ym_suppliers?id=eq._item_categories');
+    if(existing && existing.length > 0){
+      await supaFetch('/rest/v1/ym_suppliers?id=eq._item_categories', 'PATCH', {other_emails: ITEM_CATEGORIES});
+    } else {
+      await supaFetch('/rest/v1/ym_suppliers', 'POST', {
+        id:'_item_categories', name:'_item_categories', email:'_item_categories',
+        other_emails: ITEM_CATEGORIES, sort_order:-2, deleted:false
+      });
+    }
+  } catch(e){ console.error('Save categories error:', e); }
 }
 
 function renderCategoriesSettings(el, editIdx){
@@ -2246,7 +2250,7 @@ function renderRFP(){
           <div class="ir-field">
             <label>Delivery Location</label>
             <div style="display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;background:var(--bg);">
-              ${['Clearwater, FL','Vermont','Palmetto','Tarpon Springs, FL'].map(loc=>`
+              ${['Clearwater, FL','Vermont, VT','Palmetto, FL','Tarpon Springs, FL'].map(loc=>`
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
                   <input type="checkbox" ${(it.deliveries||[it.delivery||'Clearwater, FL']).includes(loc)?'checked':''}
                     onchange="toggleDelivery(${idx},'${loc}',this.checked)"
@@ -3086,6 +3090,7 @@ async function saveCustomSuppliers(){
   try {
     for(let i=0; i<PRESET_SUPPLIERS_TEMPLATE.length; i++){
       const s = PRESET_SUPPLIERS_TEMPLATE[i];
+      if(!s.email || s.email === '_company_info' || s.email === '_item_categories') continue;
       const id = 'sup_' + s.email.replace(/[^a-zA-Z0-9]/g,'_');
       try {
         await supaFetch('/rest/v1/ym_suppliers', 'POST', {
@@ -3115,6 +3120,7 @@ async function loadCustomSuppliers(){
     if(rows && rows.length){
       rows.forEach(row => {
         if(row.id === '_company_info') return; // skip company info row
+        if(row.id === '_item_categories') return; // skip categories row
         const existing = PRESET_SUPPLIERS_TEMPLATE.findIndex(s=>s.email===row.email);
         if(existing >= 0){
           PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
