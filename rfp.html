@@ -1875,11 +1875,11 @@ async function saveCatalogToStorage(){
         sort_order: i,
         deleted: false
       }).catch(()=>{
-        // Try PATCH if POST fails (already exists)
         return supaFetch('/rest/v1/ym_catalog?id=eq.' + item.id, 'PATCH', {
           name: item.name,
           sku: item.sku || '',
           units: item.units || [],
+          cat: item.cat || 'other',
           sort_order: i,
           deleted: false
         });
@@ -1901,10 +1901,11 @@ async function loadCatalogFromStorage(){
       rows.forEach(row => {
         const existing = CATALOG.findIndex(c=>c.id===row.id);
         if(existing >= 0){
-          // Update existing item name/sku/units from Supabase
+          // Update existing item name/sku/units/cat from Supabase
           CATALOG[existing].name = row.name;
           CATALOG[existing].sku = row.sku;
           if(row.units && row.units.length) CATALOG[existing].units = row.units;
+          if(row.cat) CATALOG[existing].cat = row.cat;
           CATALOG[existing]._synced = true;
         } else {
           // Add custom item that only exists in Supabase
@@ -3089,12 +3090,12 @@ async function saveCustomSuppliers(){
       try {
         await supaFetch('/rest/v1/ym_suppliers', 'POST', {
           id: id, name: s.name, email: s.email,
-          other_emails: s.otherEmails || [], sort_order: i, deleted: false
+          other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false
         });
       } catch(e2){
         await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id, 'PATCH', {
           name: s.name, email: s.email,
-          other_emails: s.otherEmails || [], sort_order: i, deleted: false
+          other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false
         });
       }
     }
@@ -3118,11 +3119,12 @@ async function loadCustomSuppliers(){
         if(existing >= 0){
           PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
           PRESET_SUPPLIERS_TEMPLATE[existing].otherEmails = row.other_emails || [];
+          PRESET_SUPPLIERS_TEMPLATE[existing].category = row.category || '';
           PRESET_SUPPLIERS_TEMPLATE[existing]._synced = true;
         } else {
           PRESET_SUPPLIERS_TEMPLATE.push({
             name: row.name, email: row.email,
-            otherEmails: row.other_emails || [], _custom: true, _synced: true
+            otherEmails: row.other_emails || [], category: row.category||'', _custom: true, _synced: true
           });
         }
       });
