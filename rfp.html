@@ -1218,18 +1218,18 @@ Subject: RFP Response - ${rfpNum} [${sup.name}]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 6. CONTACT INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-\${companyInfo.contact1_name}, \${companyInfo.contact1_title}
-\${companyInfo.contact2_name}, \${companyInfo.contact2_title}
-Email: \${companyInfo.email}
-Phone: \${companyInfo.phone}
+${companyInfo.contact1_name}, ${companyInfo.contact1_title}
+${companyInfo.contact2_name}, ${companyInfo.contact2_title}
+Email: ${companyInfo.email}
+Phone: ${companyInfo.phone}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Thank you for your time. We look forward to reviewing your proposal.
 
 Warm regards,
-Purchasing Department | \${companyInfo.name}
-\${companyInfo.email} | \${companyInfo.website}`;
+Purchasing Department | ${companyInfo.name}
+${companyInfo.email} | ${companyInfo.website}`;
 
   const cc = (sup.otherEmails||[]).join(',');
 
