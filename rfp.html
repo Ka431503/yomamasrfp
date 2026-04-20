@@ -1866,28 +1866,20 @@ async function deleteCatalogItem(i){
 }
 
 async function saveCatalogToStorage(){
-  // Save all catalog items to Supabase
   try {
     for(let i=0; i<CATALOG.length; i++){
       const item = CATALOG[i];
-      await supaFetch('/rest/v1/ym_catalog', 'POST', {
-        id: item.id,
-        name: item.name,
-        sku: item.sku || '',
-        units: item.units || [],
-        cat: item.cat || 'other',
-        sort_order: i,
-        deleted: false
-      }).catch(()=>{
-        return supaFetch('/rest/v1/ym_catalog?id=eq.' + item.id, 'PATCH', {
-          name: item.name,
-          sku: item.sku || '',
-          units: item.units || [],
-          cat: item.cat || 'other',
-          sort_order: i,
-          deleted: false
-        });
-      });
+      const data = {
+        id: item.id, name: item.name, sku: item.sku || '',
+        units: item.units || [], cat: item.cat || 'other',
+        sort_order: i, deleted: false
+      };
+      const existing = await supaFetch('/rest/v1/ym_catalog?id=eq.' + item.id);
+      if(existing && existing.length > 0){
+        await supaFetch('/rest/v1/ym_catalog?id=eq.' + item.id, 'PATCH', data);
+      } else {
+        await supaFetch('/rest/v1/ym_catalog', 'POST', data);
+      }
     }
   } catch(e){ console.error('Save catalog error:', e); }
 }
@@ -3092,16 +3084,14 @@ async function saveCustomSuppliers(){
       const s = PRESET_SUPPLIERS_TEMPLATE[i];
       if(!s.email || s.email === '_company_info' || s.email === '_item_categories') continue;
       const id = 'sup_' + s.email.replace(/[^a-zA-Z0-9]/g,'_');
-      try {
-        await supaFetch('/rest/v1/ym_suppliers', 'POST', {
-          id: id, name: s.name, email: s.email,
-          other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false
-        });
-      } catch(e2){
-        await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id, 'PATCH', {
-          name: s.name, email: s.email,
-          other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false
-        });
+      const data = { id: id, name: s.name, email: s.email,
+        other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false };
+      // Check if exists first
+      const existing = await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id);
+      if(existing && existing.length > 0){
+        await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id, 'PATCH', data);
+      } else {
+        await supaFetch('/rest/v1/ym_suppliers', 'POST', data);
       }
     }
   } catch(e){ console.error('Save suppliers error:', e); }
