@@ -1391,6 +1391,10 @@ function renderCatalogSettings(el, editIdx){
       html += '<div style="flex:1;">';
       html += '<div style="font-weight:600;font-size:13px;">' + item.name + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + (item.sku||'') + ' · ' + (item.units||[]).join(', ') + '</div>';
+      if(item.cat){
+        var catLabel = CATS_MAP[item.cat] || item.cat;
+        html += '<span style="font-family:monospace;font-size:9px;background:#e8ecf5;color:var(--muted);padding:1px 6px;border-radius:3px;margin-top:3px;display:inline-block;">' + catLabel + '</span>';
+      }
       html += '</div>';
       html += '<button onclick="event.stopPropagation();catalogRowClick(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
       html += '<button onclick="event.stopPropagation();deleteCatalogItem(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;color:#aaa;">🗑️</button>';
@@ -1842,12 +1846,13 @@ async function saveCatalogAdd(){
   const sku = document.getElementById('cadd_sku').value.trim();
   const units = document.getElementById('cadd_units').value.split(',').map(u=>u.trim()).filter(u=>u);
   if(!name){ alert('Name is required.'); return; }
+  const newCat = document.getElementById('cadd_cat') ? document.getElementById('cadd_cat').value : 'other';
   const newItem = {
     id: 'custom_' + Date.now(),
     name: name,
     sku: sku,
     units: units.length ? units : ['Units'],
-    cat: 'other',
+    cat: newCat,
     _custom: true
   };
   CATALOG.push(newItem);
@@ -2168,23 +2173,23 @@ function renderRFP(){
   <div class="rfp-meta-band">
     <div class="rfp-meta-cell">
       <div class="rmc-label">RFP Title</div>
-      <input class="rmc-input" placeholder="e.g. Q1 2026 Ingredients" value="${state.rfpName}" oninput="state.rfpName=this.value"/>
+      <input class="rmc-input" placeholder="e.g. Q1 2026 Ingredients" value="${state.rfpName}" oninput="state.rfpName=this.value;saveProjects()"/>
     </div>
     <div class="rfp-meta-cell">
       <div class="rmc-label">RFP Number</div>
-      <input class="rmc-input" value="${state.rfpNumber}" oninput="state.rfpNumber=this.value"/>
+      <input class="rmc-input" value="${state.rfpNumber}" oninput="state.rfpNumber=this.value;saveProjects()"/>
     </div>
     <div class="rfp-meta-cell">
       <div class="rmc-label">Issue Date</div>
-      <input class="rmc-input" type="date" value="${state.rfpDate}" oninput="state.rfpDate=this.value"/>
+      <input class="rmc-input" type="date" value="${state.rfpDate}" oninput="state.rfpDate=this.value;saveProjects()"/>
     </div>
     <div class="rfp-meta-cell">
       <div class="rmc-label">Quote Deadline</div>
-      <input class="rmc-input" type="date" value="${state.rfpDeadline}" oninput="state.rfpDeadline=this.value"/>
+      <input class="rmc-input" type="date" value="${state.rfpDeadline}" oninput="state.rfpDeadline=this.value;saveProjects()"/>
     </div>
     <div class="rfp-meta-cell">
       <div class="rmc-label">Currency</div>
-      <select class="rmc-input" onchange="state.rfpCurrency=this.value">
+      <select class="rmc-input" onchange="state.rfpCurrency=this.value;saveProjects()">
         <option>USD</option><option>MXN</option><option>EUR</option>
       </select>
     </div>
