@@ -1467,7 +1467,7 @@ function renderSupplierSettings(el, editIdx){
       html += '<div style="margin-bottom:10px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">ADDITIONAL EMAILS (comma separated)</label>';
       html += '<input id="sedit_others" value="' + (s.otherEmails||[]).join(', ') + '" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"/></div>';
       html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORY <span style="color:var(--muted);font-weight:400;">(e.g. Packaging, Ingredients, Caps, Jars)</span></label>';
-      html += '<select id="sedit_cat" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-size:13px;"><option value="">-- Select category --</option>'; ITEM_CATEGORIES.forEach(function(c){ html += '<option value="'+c.id+'"'+((s.category||'')===(c.id)?' selected':'')+'>'+c.label+'</option>'; }); html += '</select></div>';
+      html += '<div style="margin-bottom:12px;"><label style="font-family:monospace;font-size:9px;color:var(--muted);display:block;margin-bottom:4px;">CATEGORIES (select all that apply)</label><div style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1.5px solid var(--border);border-radius:5px;background:#fff;">'; var sCats = Array.isArray(s.categories) ? s.categories : (s.category ? [s.category] : []); ITEM_CATEGORIES.forEach(function(c){ var checked = sCats.includes(c.id) ? 'checked' : ''; html += '<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;padding:3px 6px;background:var(--bg);border-radius:4px;"><input type="checkbox" value="'+c.id+'" '+checked+' onchange="toggleSupplierCat(this)" style="cursor:pointer;accent-color:var(--navy);"/>'+c.label+'</label>'; }); html += '</div></div>';
       html += '<div style="display:flex;gap:8px;">';
       html += '<button onclick="saveSupplierEdit(' + i + ')" style="font-family:monospace;font-size:11px;padding:7px 16px;background:var(--navy);color:#fff;border:none;border-radius:5px;cursor:pointer;">Save</button>';
       html += '<button onclick="settingsCancelSupplier()" style="font-family:monospace;font-size:11px;padding:7px 16px;background:none;border:1px solid var(--border);border-radius:5px;cursor:pointer;color:var(--muted);">Cancel</button>';
@@ -1475,7 +1475,9 @@ function renderSupplierSettings(el, editIdx){
     } else {
       html += '<div class="sup-row" data-name="' + s.name + '" data-email="' + s.email + '" onclick="supplierRowClick(' + i + ')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:7px;margin-bottom:6px;cursor:pointer;">';
       html += '<div style="flex:1;">';
-      html += '<div style="font-weight:600;font-size:13px;">' + s.name + (s.category?'<span style="font-family:monospace;font-size:9px;background:#e8ecf5;color:var(--muted);padding:1px 6px;border-radius:3px;margin-left:6px;">'+s.category+'</span>':'') + '</div>';
+      var supCats = Array.isArray(s.categories) ? s.categories : (s.category ? [s.category] : []);
+      var catTags = supCats.map(function(cid){ var cl = ITEM_CATEGORIES.find(function(c){return c.id===cid;}); return cl ? '<span style="font-family:monospace;font-size:9px;background:#e8ecf5;color:var(--muted);padding:1px 6px;border-radius:3px;margin-left:4px;">'+cl.label+'</span>' : ''; }).join('');
+      html += '<div style="font-weight:600;font-size:13px;">' + s.name + catTags + '</div>';
       html += '<div style="font-family:monospace;font-size:10px;color:var(--muted);">' + s.email + (s.otherEmails&&s.otherEmails.length?' · +'+s.otherEmails.length+' more':'') + '</div>';
       html += '</div>';
       html += '<button onclick="event.stopPropagation();supplierRowClick(' + i + ')" style="font-family:monospace;font-size:10px;padding:5px 12px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;color:var(--muted);">✏️</button>';
@@ -1501,7 +1503,11 @@ function saveSupplierEdit(i){
   PRESET_SUPPLIERS_TEMPLATE[i].name = name;
   PRESET_SUPPLIERS_TEMPLATE[i].email = email;
   PRESET_SUPPLIERS_TEMPLATE[i].otherEmails = others;
-  PRESET_SUPPLIERS_TEMPLATE[i].category = document.getElementById('sedit_cat') ? document.getElementById('sedit_cat').value.trim() : (PRESET_SUPPLIERS_TEMPLATE[i].category||'');
+  var catBoxes = document.querySelectorAll('#settingsContent input[type="checkbox"][onchange="toggleSupplierCat(this)"]');
+  var newCats = [];
+  catBoxes.forEach(function(cb){ if(cb.checked) newCats.push(cb.value); });
+  PRESET_SUPPLIERS_TEMPLATE[i].categories = newCats;
+  PRESET_SUPPLIERS_TEMPLATE[i].category = newCats[0] || '';
   PRESET_SUPPLIERS_TEMPLATE[i]._custom = true;
   saveCustomSuppliers();
   renderSupplierSettings(document.getElementById('settingsContent'));
@@ -1518,6 +1524,8 @@ async function deleteMasterSupplier(i){
 function supplierRowClick(i){
   renderSupplierSettings(document.getElementById('settingsContent'), i);
 }
+
+function toggleSupplierCat(cb){ /* checkboxes self-managed */ }
 
 function settingsCancelSupplier(){
   renderSupplierSettings(document.getElementById('settingsContent'));
@@ -2385,8 +2393,8 @@ function openPicker(){
 }
 function renderPicker(){
   const q=document.getElementById('pickerSearch').value.toLowerCase();
-  const cats=['all',...Object.keys(CATS_MAP)];
-  document.getElementById('pickerCats').innerHTML=cats.map(c=>`<div class="cf ${pickerCat===c?'on':''}" onclick="pickerCat='${c}';renderPicker()">${c==='all'?'All':CATS_MAP[c]}</div>`).join('');
+  const cats=['all',...ITEM_CATEGORIES.map(c=>c.id)];
+  document.getElementById('pickerCats').innerHTML=cats.map(c=>`<div class="cf ${pickerCat===c?'on':''}" onclick="pickerCat='${c}';renderPicker()">${c==='all'?'All':(ITEM_CATEGORIES.find(ic=>ic.id===c)||{label:CATS_MAP[c]||c}).label}</div>`).join('');
   const alreadyAdded=new Set(state.items.map(i=>i.catId));
   const items=CATALOG.filter(c=>{
     const mc=pickerCat==='all'||c.cat===pickerCat;
@@ -3003,7 +3011,7 @@ function renderSupPicker(){
   const filtered = PRESET_SUPPLIERS_TEMPLATE.filter(s =>
     (!q || s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) ||
     s.otherEmails.some(e=>e.toLowerCase().includes(q))) &&
-    (!catFilter || (s.category||'') === catFilter)
+    (!catFilter || (Array.isArray(s.categories) ? s.categories.includes(catFilter) : (s.category||'') === catFilter))
   );
   document.getElementById('supPickerGrid').innerHTML = filtered.map(s => {
     const isAdded = existingEmails.has(s.email.toLowerCase());
@@ -3090,7 +3098,11 @@ async function saveCustomSuppliers(){
       if(!s.email || s.email === '_company_info' || s.email === '_item_categories') continue;
       const id = 'sup_' + s.email.replace(/[^a-zA-Z0-9]/g,'_');
       const data = { id: id, name: s.name, email: s.email,
-        other_emails: s.otherEmails || [], category: s.category||'', sort_order: i, deleted: false };
+        other_emails: s.otherEmails || [], category: s.category||'',
+        sort_order: i, deleted: false };
+      // Save categories as JSON in other_emails field... actually save in category column as JSON string
+      if(s.categories && s.categories.length) data.category = JSON.stringify(s.categories);
+      else if(s.category) data.category = s.category;
       // Check if exists first
       const existing = await supaFetch('/rest/v1/ym_suppliers?id=eq.' + id);
       if(existing && existing.length > 0){
@@ -3120,12 +3132,17 @@ async function loadCustomSuppliers(){
         if(existing >= 0){
           PRESET_SUPPLIERS_TEMPLATE[existing].name = row.name;
           PRESET_SUPPLIERS_TEMPLATE[existing].otherEmails = row.other_emails || [];
-          PRESET_SUPPLIERS_TEMPLATE[existing].category = row.category || '';
+          var loadedCat = row.category || '';
+          try { if(loadedCat.startsWith('[')) { PRESET_SUPPLIERS_TEMPLATE[existing].categories = JSON.parse(loadedCat); loadedCat = JSON.parse(loadedCat)[0]||''; } } catch(e){}
+          PRESET_SUPPLIERS_TEMPLATE[existing].category = loadedCat;
           PRESET_SUPPLIERS_TEMPLATE[existing]._synced = true;
         } else {
+          var newCat = row.category || '';
+          var newCats = [];
+          try { if(newCat.startsWith('[')) { newCats = JSON.parse(newCat); newCat = newCats[0]||''; } } catch(e){}
           PRESET_SUPPLIERS_TEMPLATE.push({
             name: row.name, email: row.email,
-            otherEmails: row.other_emails || [], category: row.category||'', _custom: true, _synced: true
+            otherEmails: row.other_emails || [], category: newCat, categories: newCats, _custom: true, _synced: true
           });
         }
       });
