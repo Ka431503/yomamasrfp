@@ -2256,7 +2256,7 @@ function renderRFP(){
           <div class="ir-field">
             <label>Delivery Location</label>
             <div style="display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:5px;background:var(--bg);">
-              ${['Clearwater, FL','Vermont, VT','Palmetto, FL','Tarpon Springs, FL'].map(loc=>`
+              ${['Clearwater, FL','Vermont, VT','Palmetto, FL','Tarpon Springs, FL','Downingtown, PA'].map(loc=>`
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--ink);">
                   <input type="checkbox" ${(it.deliveries||[it.delivery||'Clearwater, FL']).includes(loc)?'checked':''}
                     onchange="toggleDelivery(${idx},'${loc}',this.checked)"
