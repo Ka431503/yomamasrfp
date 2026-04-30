@@ -1086,6 +1086,47 @@ async function generateSupplierToken(supId){
   }
 }
 
+async function resendRFP(supId){
+  const sup = state.suppliers.find(s=>s.id===supId);
+  if(!sup){ alert('Supplier not found.'); return; }
+  if(!isGmailConnected()){ connectGmail(); return; }
+
+  // Look up existing token from Supabase
+  const rows = await supaFetch('/rest/v1/rfp_responses?rfp_id=eq.'+state.id+'&supplier_id=eq.'+supId+'&select=token');
+  if(!rows || !rows.length){
+    // No existing token — send fresh RFP
+    if(confirm('No previous email found for this supplier. Send a new RFP?')){
+      sendRFP(supId);
+    }
+    return;
+  }
+
+  const existingToken = rows[0].token;
+  const responseLink = NETLIFY_URL + '/respond.html?token=' + existingToken;
+  const rfpNum = state.rfpNumber || 'RFP-2026-001';
+  const deadline = state.rfpDeadline ? new Date(state.rfpDeadline+' ').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '[DEADLINE TBD]';
+
+  const subject = 'Yo Mamas Foods - ' + rfpNum + ' | ' + (state.rfpName ? state.rfpName + ' - ' : '') + 'Quote Request (Reminder)';
+  const body = 'Dear ' + (sup.contact||sup.name) + ',\n\n' +
+    'This is a reminder regarding our Request for Quotation ' + rfpNum + (state.rfpName?' - '+state.rfpName:'') + '.\n\n' +
+    'Your unique quote form link (same as previously sent):\n' + responseLink + '\n\n' +
+    'Response Deadline: ' + deadline + ' - 5:00 PM ET\n\n' +
+    'If you have already submitted your quote, please disregard this message.\n\n' +
+    'Thank you,\n' +
+    'Purchasing Department | ' + companyInfo.name + '\n' +
+    companyInfo.email + ' | ' + companyInfo.phone;
+
+  const sent = await sendGmailEmail(sup.email, (sup.otherEmails||[]).join(','), subject, body);
+  if(sent){
+    setTimeout(()=>{
+      const banner = document.createElement('div');
+      banner.innerHTML = '<div style="position:fixed;top:70px;right:20px;background:var(--navy);color:white;padding:12px 20px;border-radius:8px;font-family:monospace;font-size:12px;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.3);">🔄 Reminder sent to '+sup.name+'</div>';
+      document.body.appendChild(banner);
+      setTimeout(()=>banner.remove(), 4000);
+    }, 100);
+  }
+}
+
 async function sendRFP(supId){
   const sup = state.suppliers.find(s=>s.id===supId);
   if(!sup) return;
@@ -2490,6 +2531,12 @@ function renderSup(){
             onmouseover="this.style.background='var(--red)';this.style.borderColor='var(--red)'"
             onmouseout="this.style.background='var(--navy)';this.style.borderColor='var(--navy)'">
             📧 Send RFP
+          </button>
+          <button onclick="resendRFP('${sup.id}')" title="Resend using existing link"
+            style="font-family:'IBM Plex Mono',monospace;font-size:10px;padding:5px 12px;background:none;border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--muted);"
+            onmouseover="this.style.borderColor='var(--navy)';this.style.color='var(--navy)'"
+            onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+            🔄 Resend
           </button>
           <button onclick="removeSupplier('${sup.id}')" title="Remove supplier"
             style="background:none;border:1.5px solid var(--border);border-radius:4px;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 8px;transition:all .15s;"
